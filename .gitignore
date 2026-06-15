@@ -1,0 +1,46 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# --- Environnements virtuels ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Secrets / config locale ---
+.env
+.env.local
+
+# --- Sources brutes AREP / INSEE (NE JAMAIS COMMIT) ---
+# Les .xlsx/.xls servent uniquement à générer les CSV via scripts/.
+# On ne les versionne pas (fichiers lourds + données internes).
+*.xlsx
+*.xls
+
+# --- État runtime (non versionné) ---
+backend/data/gouvernance.db
+backend/cache/
+
+# --- OS / éditeurs ---
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# ============================================================
+# OPTIONNEL - déploiement "propre" (à activer avec l'équipe infra AREP)
+# ------------------------------------------------------------
+# Par défaut on versionne les CSV de données + le cache precomputed.pkl.gz
+# pour que Render fonctionne sans étape de build supplémentaire.
+#
+# Pour un repo plus léger, décommenter les 2 lignes ci-dessous : les CSV et
+# le pickle ne seront plus commit, mais il faudra alors que Render exécute
+#   python -m scripts.precompute_cache
+# au build (les CSV doivent être présents à ce moment-là).
+#
+# backend/data/*.csv
+# backend/data/precomputed.pkl.gz
