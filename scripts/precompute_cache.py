@@ -15,7 +15,6 @@ Ce pickle contient TOUT ce dont les services ont besoin pour répondre vite :
 
 À lancer :
   - en local (Codespaces)  : python -m scripts.precompute_cache
-  - sur Render             : à ajouter en fin de Build Command (voir README)
 
 Fait également deux choses utiles :
   - écrit un fichier précomputed.pkl.gz compressé (~5 Mo attendu)
@@ -45,6 +44,7 @@ CSV_AGE_COMMUNES = DATA_DIR / "age_communes.csv"
 CSV_REVENU_2017 = DATA_DIR / "filosofi_revenu_2017.csv"
 CSV_REVENU_2019 = DATA_DIR / "filosofi_revenu_2019.csv"
 CSV_DISPERSION = DATA_DIR / "dispersion_epci.csv"
+CSV_DISPERSION_COMMUNES = DATA_DIR / "dispersion_communes.csv"
 CSV_SCORE_SOCLE = DATA_DIR / "score_socle_communes.csv"
 CSV_SCORE_SOCLE_EPCI = DATA_DIR / "score_socle_epci.csv"
 CSV_MOBILITE = DATA_DIR / "mobilite_communes.csv"
@@ -279,7 +279,7 @@ def enrich_age_communes(communes: dict) -> None:
 
 def enrich_revenu_history(communes: dict, epcis_provisoires: dict | None = None) -> None:
     """Enrichit avec le revenu médian 2017 et 2019.
-    
+
     Les CSV `filosofi_revenu_2017.csv` et `filosofi_revenu_2019.csv` contiennent
     CODGEO (5 chiffres pour commune, 9 pour EPCI) + valeur. On enrichit les communes
     ici ; les EPCI seront enrichis plus tard via _epci_revenu_history.
@@ -287,8 +287,8 @@ def enrich_revenu_history(communes: dict, epcis_provisoires: dict | None = None)
     print("[3c/5] Lecture historique revenu (2017, 2019)...")
     count_com_17 = count_com_19 = 0
     count_epci_17 = count_epci_19 = 0
-    
-    # Buffer pour EPCI : codgeo → {2017: val, 2019: val}
+
+    # Buffer pour EPCI : codgeo -> {2017: val, 2019: val}
     if not hasattr(enrich_revenu_history, "_epci_buffer"):
         enrich_revenu_history._epci_buffer = {}
     epci_buf = enrich_revenu_history._epci_buffer
@@ -309,12 +309,16 @@ def enrich_revenu_history(communes: dict, epcis_provisoires: dict | None = None)
                     continue
                 if len(codgeo) == 5 and codgeo in communes:
                     communes[codgeo][col] = v
-                    if year == 2017: count_com_17 += 1
-                    else: count_com_19 += 1
+                    if year == 2017:
+                        count_com_17 += 1
+                    else:
+                        count_com_19 += 1
                 elif len(codgeo) == 9:
                     epci_buf.setdefault(codgeo, {})[year] = v
-                    if year == 2017: count_epci_17 += 1
-                    else: count_epci_19 += 1
+                    if year == 2017:
+                        count_epci_17 += 1
+                    else:
+                        count_epci_19 += 1
 
     print(f"      communes : {count_com_17:,} en 2017, {count_com_19:,} en 2019".replace(",", " "))
     print(f"      EPCI     : {count_epci_17:,} en 2017, {count_epci_19:,} en 2019".replace(",", " "))
@@ -344,7 +348,7 @@ def compute_derived_per_commune(communes: dict) -> None:
         pop = c.get("P21_POP")
         # Densité
         c["densite_brute"] = safe_div(pop, c.get("SURFKM2"))
-        # TCAM population 2015→2021 (6 ans)
+        # TCAM population 2015->2021 (6 ans)
         c["tcam_pop"] = tcam(c.get("P21_POP"), c.get("P15_POP"), 6)
         # Indicateurs âge (si données dispo)
         p60p = _sum_none_safe(c.get("P21_POP6074"), c.get("P21_POP7589"), c.get("P21_POP90P"))
@@ -423,9 +427,9 @@ def enrich_associations(communes: dict) -> None:
         print(f"[4d/5] {CSV_ASSOCIATIONS.name} absent, associations ignorees.")
         return
     print(f"[4d/5] Lecture {CSV_ASSOCIATIONS.name}...")
-    cols = ["nb_assos","nb_environnement","nb_culture","nb_social","nb_sport","nb_sante","nb_auto",
-            "densite_assos_1000hab","densite_environnement_1000hab","densite_culture_1000hab",
-            "densite_social_1000hab","densite_sport_1000hab"]
+    cols = ["nb_assos", "nb_environnement", "nb_culture", "nb_social", "nb_sport", "nb_sante", "nb_auto",
+            "densite_assos_1000hab", "densite_environnement_1000hab", "densite_culture_1000hab",
+            "densite_social_1000hab", "densite_sport_1000hab"]
     count = 0
     with open(CSV_ASSOCIATIONS, "r", encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -452,7 +456,7 @@ def enrich_equipements_panier(communes: dict) -> None:
             codgeo = (row.get("CODGEO") or "").strip()
             if codgeo not in communes:
                 continue
-            for col in ["variete_equip","nb_equip_total","densite_equip_1000hab"]:
+            for col in ["variete_equip", "nb_equip_total", "densite_equip_1000hab"]:
                 v = to_float(row.get(col))
                 if v is not None:
                     communes[codgeo][col] = v
@@ -472,7 +476,7 @@ def enrich_gares(communes: dict) -> None:
             codgeo = (row.get("CODGEO") or "").strip()
             if codgeo not in communes:
                 continue
-            for col in ["gare_nat","gare_reg","gare_loc","points_gare"]:
+            for col in ["gare_nat", "gare_reg", "gare_loc", "points_gare"]:
                 v = to_float(row.get(col))
                 if v is not None:
                     communes[codgeo][col] = v
@@ -562,13 +566,13 @@ def build_epcis(communes: dict) -> dict:
         ) or None
 
         # Agregation associations EPCI
-        for col in ["nb_assos","nb_environnement","nb_culture","nb_social","nb_sport","nb_sante","nb_auto"]:
+        for col in ["nb_assos", "nb_environnement", "nb_culture", "nb_social", "nb_sport", "nb_sante", "nb_auto"]:
             tot = sum((r.get(col) or 0) for r in rows)
             entry[col] = tot if tot else None
         _pop = entry.get("P21_POP")
         if entry.get("nb_assos") and _pop and _pop > 0:
             entry["densite_assos_1000hab"] = entry["nb_assos"] / _pop * 1000
-            for cat in ["environnement","culture","social","sport"]:
+            for cat in ["environnement", "culture", "social", "sport"]:
                 nb = entry.get("nb_" + cat)
                 entry["densite_" + cat + "_1000hab"] = (nb / _pop * 1000) if nb else None
         else:
@@ -679,7 +683,7 @@ def apply_equip_panier_epci(epcis: dict) -> None:
             code = (row.get("code_epci") or "").strip()
             if code not in epcis:
                 continue
-            for col in ["variete_equip","densite_equip_1000hab"]:
+            for col in ["variete_equip", "densite_equip_1000hab"]:
                 v = to_float(row.get(col))
                 if v is not None:
                     epcis[code][col] = v
@@ -698,7 +702,7 @@ def apply_gares_epci(epcis: dict) -> None:
             code = (row.get("code_epci") or "").strip()
             if code not in epcis:
                 continue
-            for col in ["gare_nat","gare_reg","gare_loc","points_gare"]:
+            for col in ["gare_nat", "gare_reg", "gare_loc", "points_gare"]:
                 v = to_float(row.get(col))
                 if v is not None:
                     epcis[code][col] = v
@@ -717,8 +721,8 @@ def apply_solaire_epci(epcis: dict) -> None:
             code = (row.get("code_epci") or "").strip()
             if code not in epcis:
                 continue
-            for col in ["puis_solaire_mw","nb_install_solaire",
-                        "puis_solaire_kw_par_hab","nb_install_par_1000hab"]:
+            for col in ["puis_solaire_mw", "nb_install_solaire",
+                        "puis_solaire_kw_par_hab", "nb_install_par_1000hab"]:
                 v = to_float(row.get(col))
                 if v is not None:
                     epcis[code][col] = v
@@ -756,8 +760,6 @@ def _qts(sorted_vals: list, ps=(20, 40, 60, 80)) -> list:
 # ===========================================================================
 
 
-
-
 def enrich_score_socle_epci(epcis: dict) -> None:
     """Enrichit chaque EPCI avec le score socle équipements (moyenne pondérée pop)."""
     print("[3g/5] Lecture score socle EPCI...")
@@ -772,50 +774,59 @@ def enrich_score_socle_epci(epcis: dict) -> None:
                 continue
             score = to_float(row.get("score_socle"))
             taux = to_float(row.get("taux_couverture_socle"))
-            if score is not None: epcis[code]["score_socle"] = score
-            if taux is not None: epcis[code]["taux_couverture_socle"] = taux
+            if score is not None:
+                epcis[code]["score_socle"] = score
+            if taux is not None:
+                epcis[code]["taux_couverture_socle"] = taux
             n += 1
     print(f"      {n:,} EPCI enrichis socle".replace(",", " "))
 
 
 def enrich_dispersion(communes: dict, epcis_provisoires: dict | None = None) -> None:
-    """Enrichit communes avec les 2 indicateurs de dispersion habitat/équipements.
+    """Enrichit les communes avec les 2 indicateurs de dispersion habitat/équipements.
 
-    Le CSV `dispersion_epci.csv` contient les % calculés par EPCI :
-      - pct_habitat_zone_ecole_15 : % de la pop à <1.5 km d'une école élémentaire
-      - pct_equipements_zone_ecole_15 : % équipements quotidien à <1.5 km
+    Deux niveaux de données :
+      - dispersion_epci.csv      : valeur par EPCI (sert aux fiches EPCI + repli commune)
+      - dispersion_communes.csv  : valeur au maillage commune (prioritaire si présente)
 
-    Ces valeurs (indicateurs TERRITORIAUX) sont appliquées à toutes les communes
-    de chaque EPCI, et stockées dans un buffer pour les EPCI eux-mêmes.
+    On applique d'abord la valeur EPCI à toutes ses communes (repli), puis on
+    écrase par la valeur commune quand elle existe. Ainsi une commune sans calcul
+    fin garde au moins la valeur de son EPCI, et l'affichage varie commune par
+    commune dès que dispersion_communes.csv est disponible.
+
+    Les indicateurs concernés :
+      - pct_habitat_zone_ecole_15      : % pop à <1.5 km d'une école élémentaire
+      - pct_equipements_zone_ecole_15  : % équipements quotidien à <1.5 km
     """
     print("[3e/5] Lecture dispersion habitat/équipements...")
-    if not CSV_DISPERSION.exists():
-        print(f"      {CSV_DISPERSION.name} absent, dispersion ignorée.")
-        return
 
+    # --- 1) Buffer EPCI (pour les fiches EPCI et le repli commune) ---
     if not hasattr(enrich_dispersion, "_epci_buffer"):
         enrich_dispersion._epci_buffer = {}
     epci_buf = enrich_dispersion._epci_buffer
 
     count_epci = 0
-    with open(CSV_DISPERSION, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            epci_code = (row.get("code_epci") or "").strip()
-            if not epci_code:
-                continue
-            hab = to_float(row.get("pct_habitat_zone_ecole_15"))
-            eq = to_float(row.get("pct_equipements_zone_ecole_15"))
-            if hab is None and eq is None:
-                continue
-            epci_buf[epci_code] = {
-                "pct_habitat_zone_ecole_15": hab,
-                "pct_equipements_zone_ecole_15": eq,
-            }
-            count_epci += 1
+    if CSV_DISPERSION.exists():
+        with open(CSV_DISPERSION, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                epci_code = (row.get("code_epci") or "").strip()
+                if not epci_code:
+                    continue
+                hab = to_float(row.get("pct_habitat_zone_ecole_15"))
+                eq = to_float(row.get("pct_equipements_zone_ecole_15"))
+                if hab is None and eq is None:
+                    continue
+                epci_buf[epci_code] = {
+                    "pct_habitat_zone_ecole_15": hab,
+                    "pct_equipements_zone_ecole_15": eq,
+                }
+                count_epci += 1
+    else:
+        print(f"      {CSV_DISPERSION.name} absent.")
 
-    # Appliquer aux communes (héritage de leur EPCI)
-    count_com = 0
+    # --- 2) Repli : valeur EPCI appliquée à ses communes ---
+    count_herit = 0
     for code_com, c in communes.items():
         epci_code = c.get("epci")
         if not epci_code or epci_code not in epci_buf:
@@ -825,10 +836,29 @@ def enrich_dispersion(communes: dict, epcis_provisoires: dict | None = None) -> 
             c["pct_habitat_zone_ecole_15"] = vals["pct_habitat_zone_ecole_15"]
         if vals["pct_equipements_zone_ecole_15"] is not None:
             c["pct_equipements_zone_ecole_15"] = vals["pct_equipements_zone_ecole_15"]
-        count_com += 1
+        count_herit += 1
 
-    print(f"      EPCI buffer : {count_epci}")
-    print(f"      Communes enrichies (héritage EPCI) : {count_com:,}".replace(",", " "))
+    # --- 3) Maillage commune : écrase le repli quand la valeur commune existe ---
+    count_com = 0
+    if CSV_DISPERSION_COMMUNES.exists():
+        with open(CSV_DISPERSION_COMMUNES, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                code = (row.get("codgeo") or row.get("CODGEO") or "").strip()
+                if code not in communes:
+                    continue
+                hab = to_float(row.get("pct_habitat_zone_ecole_15"))
+                eq = to_float(row.get("pct_equipements_zone_ecole_15"))
+                if hab is not None:
+                    communes[code]["pct_habitat_zone_ecole_15"] = hab
+                if eq is not None:
+                    communes[code]["pct_equipements_zone_ecole_15"] = eq
+                count_com += 1
+        print(f"      maillage commune : {count_com:,} communes".replace(",", " "))
+    else:
+        print(f"      {CSV_DISPERSION_COMMUNES.name} absent -> communes en repli EPCI uniquement.")
+
+    print(f"      EPCI buffer : {count_epci} | repli communes : {count_herit:,}".replace(",", " "))
 
 
 def apply_dispersion_to_epcis(epcis: dict) -> None:
@@ -844,8 +874,6 @@ def apply_dispersion_to_epcis(epcis: dict) -> None:
                     epcis[code][k] = v
             n += 1
     print(f"      {n}/{len(buf)} EPCI enrichis dispersion")
-
-
 
 
 def enrich_score_socle(communes: dict) -> None:

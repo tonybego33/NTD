@@ -1,174 +1,298 @@
 """
-Lit un ZIP INSEE Filosofi historique (contient un XLSX multi-onglets),
-extrait CODGEO + médiane revenu disponible par UC, génère un mini-CSV
-consommable par precompute_cache.py.
+Calcul dispersion habitat / équipements, AUX DEUX MAILLES (commune + EPCI).
 
-INSEE distribue les Filosofi 2017 et 2019 sous forme de XLSX zippé :
-  - indic-struct-distrib-revenu-2017-COMMUNES.zip
-  - indic-struct-distrib-revenu-2019-COMMUNES.zip
+Optimisation : BPE + carreaux lus UNE seule fois, puis calcul commune par commune,
+les EPCI étant agrégés depuis les communes (chiffres EPCI identiques à la version
+précédente, aucun double calcul).
 
-Le XLSX contient plusieurs onglets ; on cherche celui qui contient CODGEO + MEDxx
-(le niveau de vie médian par unité de consommation).
+Méthode :
+  - Écoles : C108 (élémentaires) uniquement
+  - Buffer : 1,5 km
+  - Habitat : carreaux INSEE 200m Filosofi 2021
+  - Équipements : BPE A+B+D+F (panier quotidien)
+  - Calcul en EPSG:3035 (LAEA)
+  - Pool d'écoles pour une commune = TOUTES les écoles de son EPCI
+    (une école juste de l'autre côté de la limite communale compte ; évite les
+    effets de bord sur les petites communes).
 
-Usage :
-  python -m scripts.convert_filosofi_xlsx <chemin_zip_ou_xlsx> <année>
+Sorties :
+  - backend/data/dispersion_communes.csv   (NOUVEAU, une ligne par commune)
+  - backend/data/dispersion_epci.csv       (inchangé dans sa structure)
 """
-from __future__ import annotations
-
 import csv
-import io
+import gzip
+import pickle
+import re
 import sys
-import zipfile
+import time
+from collections import defaultdict
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
+PICKLE = ROOT / "backend" / "data" / "precomputed.pkl.gz"
+BPE = ROOT / "data_brut" / "BPE24.csv"
+CARREAUX = ROOT / "data_brut" / "carreaux_200m_met.csv"
+OUTPUT_EPCI = ROOT / "backend" / "data" / "dispersion_epci.csv"
+OUTPUT_COMMUNES = ROOT / "backend" / "data" / "dispersion_communes.csv"
 
-def find_xlsx_in_zip(zip_path: Path) -> str | None:
-    with zipfile.ZipFile(zip_path, "r") as z:
-        for name in z.namelist():
-            if name.lower().endswith((".xlsx", ".xls")):
-                return name
-    return None
-
-
-def load_xlsx_buffer(path: Path) -> io.BytesIO:
-    """Retourne un buffer BytesIO contenant le XLSX (depuis un ZIP ou un fichier direct)."""
-    if path.suffix.lower() == ".zip":
-        xlsx_name = find_xlsx_in_zip(path)
-        if not xlsx_name:
-            raise FileNotFoundError(f"Aucun XLSX dans {path.name}")
-        print(f"  XLSX trouvé dans le ZIP : {xlsx_name}")
-        with zipfile.ZipFile(path, "r") as z:
-            with z.open(xlsx_name) as f:
-                return io.BytesIO(f.read())
-    elif path.suffix.lower() in (".xlsx", ".xls"):
-        with open(path, "rb") as f:
-            return io.BytesIO(f.read())
-    raise ValueError(f"Format non supporté : {path.suffix}")
+RAYON_M = 1500
+TYPEQU_ECOLES = {"C108"}
+EQUIPEMENTS_QUOTIDIEN = {
+    "A129", "A203", "A206", "A207", "A208", "A301", "A302",
+    "B102", "B201", "B202", "B203", "B204", "B301", "B313", "B316",
+    "D108", "D113", "D201", "D307", "D401", "D402", "D403",
+    "D502", "F111", "F113", "F116", "F121", "F307",
+}
+IDCAR_RE = re.compile(r"N(\d+)E(\d+)")
 
 
-def find_median_sheet(wb, year: int):
-    """Cherche l'onglet contenant CODGEO + MEDxx dans son en-tête."""
-    yy = str(year)[2:]
-    target_med = f"MED{yy}"
-
-    for sheet_name in wb.sheetnames:
-        ws = wb[sheet_name]
-        # Lit les 20 premières lignes pour trouver l'en-tête
-        for row_idx, row in enumerate(ws.iter_rows(min_row=1, max_row=20, values_only=True), 1):
-            cells = [str(c).strip().upper() if c is not None else "" for c in row]
-            if "CODGEO" in cells:
-                # Vérifie qu'on a aussi une colonne médiane (MEDxx, MED, MEDIANE...)
-                has_med = any(
-                    c == target_med or c == "MED" or "MEDIANE" in c or
-                    (c.startswith("MED") and len(c) == 5)
-                    for c in cells
-                )
-                if has_med:
-                    return ws, row_idx, cells
-    return None, None, None
-
-
-def extract_medianes(buf: io.BytesIO, year: int) -> list[tuple[str, float]]:
-    """Lit le XLSX, trouve le bon onglet, extrait CODGEO + MED."""
+def parse_num(s):
+    if not s:
+        return None
     try:
-        import openpyxl
-    except ImportError:
-        sys.exit(
-            "[err] openpyxl manquant. Installe-le :\n"
-            "      pip install openpyxl --break-system-packages"
-        )
+        return float(s.replace(",", ".").strip())
+    except (ValueError, AttributeError):
+        return None
 
-    wb = openpyxl.load_workbook(buf, read_only=True, data_only=True)
-    print(f"  Onglets disponibles : {wb.sheetnames}")
 
-    ws, header_row, headers = find_median_sheet(wb, year)
-    if ws is None:
-        raise ValueError(
-            f"Aucun onglet ne contient CODGEO + MED{str(year)[2:]}.\n"
-            f"Onglets vus : {wb.sheetnames}"
-        )
+def parse_idcar(idcar):
+    m = IDCAR_RE.search(idcar or "")
+    if not m:
+        return None, None
+    return int(m.group(2)) + 100, int(m.group(1)) + 100
 
-    print(f"  Onglet retenu : '{ws.title}' (en-tête ligne {header_row})")
 
-    # Trouve les indices des colonnes
-    cg_idx = headers.index("CODGEO")
-    yy = str(year)[2:]
-    med_idx = None
-    candidates = [f"MED{yy}", "MED", "MEDIANE"]
-    for cand in candidates:
-        if cand in headers:
-            med_idx = headers.index(cand)
-            break
-    if med_idx is None:
-        # Fallback : 1ère colonne qui commence par MED
-        for i, h in enumerate(headers):
-            if h.startswith("MED"):
-                med_idx = i
+def _pop_in_buffer(carreaux, ecoles, rayon_sq):
+    """carreaux : liste (x, y, ind). Retourne (pop_dans_buffer, pop_totale)."""
+    pop_in = 0.0
+    pop_tot = 0.0
+    for cx, cy, ind in carreaux:
+        pop_tot += ind
+        for sx, sy in ecoles:
+            if (cx - sx) ** 2 + (cy - sy) ** 2 <= rayon_sq:
+                pop_in += ind
                 break
-    if med_idx is None:
-        raise ValueError(f"Colonne médiane introuvable. Headers : {headers[:15]}")
+    return pop_in, pop_tot
 
-    print(f"  Colonne médiane : '{headers[med_idx]}'")
 
-    # Lit les données
-    data = []
-    for row in ws.iter_rows(min_row=header_row + 1, values_only=True):
-        if cg_idx >= len(row) or med_idx >= len(row):
-            continue
-        cg = row[cg_idx]
-        med = row[med_idx]
-        if cg is None or med is None:
-            continue
-        cg_str = str(cg).strip()
-        # Filtre : communes (5 chars, peut commencer par 0 ou 2A/2B pour Corse)
-        # ou EPCI (9 chars numériques)
-        if len(cg_str) == 5:
-            pass  # commune
-        elif len(cg_str) == 9 and cg_str.isdigit():
-            pass  # EPCI
-        else:
-            continue
-        # Conversion de la valeur
-        try:
-            med_float = float(str(med).replace(",", ".").replace(" ", "").replace("\xa0", ""))
-        except (ValueError, TypeError):
-            continue
-        if med_float <= 0:
-            continue
-        data.append((cg_str, med_float))
+def _count_in_buffer(points, ecoles, rayon_sq):
+    """points : liste (x, y). Retourne (nb_dans_buffer, nb_total)."""
+    n_in = 0
+    for px, py in points:
+        for sx, sy in ecoles:
+            if (px - sx) ** 2 + (py - sy) ** 2 <= rayon_sq:
+                n_in += 1
+                break
+    return n_in, len(points)
 
-    return data
+
+def _pct(num, den):
+    return round(100 * num / den, 2) if den and den > 0 else None
 
 
 def main():
-    if len(sys.argv) < 3:
-        sys.exit("Usage : python -m scripts.convert_filosofi_xlsx <chemin_zip_ou_xlsx> <année>")
+    print("Calcul dispersion habitat / équipements — communes + EPCI")
+    print("Méthode : C108 + buffer 1.5km + carreaux 200m\n")
 
-    src = Path(sys.argv[1])
-    year = int(sys.argv[2])
+    for p, label in [(BPE, "BPE24.csv"), (CARREAUX, "carreaux_200m_met.csv"), (PICKLE, "pickle")]:
+        if not p.exists():
+            sys.exit(f"[err] {label} introuvable : {p}")
 
-    if not src.exists():
-        sys.exit(f"[err] Fichier introuvable : {src}")
+    try:
+        from pyproj import Transformer
+    except ImportError:
+        print("[w] pyproj absent, installation...")
+        import subprocess
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "pyproj", "--break-system-packages", "-q"]
+        )
+        from pyproj import Transformer
+    to_laea = Transformer.from_crs("EPSG:2154", "EPSG:3035", always_xy=True)
 
-    print(f"Lecture {src.name} (Filosofi {year})...")
-    buf = load_xlsx_buffer(src)
-    data = extract_medianes(buf, year)
+    # 1. Pickle : mapping commune <-> EPCI
+    print("[1/5] Chargement pickle...")
+    with gzip.open(PICKLE, "rb") as f:
+        data = pickle.load(f)
+    commune_to_epci = {code: c.get("epci") for code, c in data["communes"].items() if c.get("epci")}
+    commune_lib = {code: c.get("libgeo", "?") for code, c in data["communes"].items()}
+    epci_to_communes = defaultdict(list)
+    for code, epci in commune_to_epci.items():
+        epci_to_communes[epci].append(code)
+    epci_libelles = {}
+    for code, c in data["communes"].items():
+        epci = c.get("epci")
+        if epci and epci not in epci_libelles:
+            epci_libelles[epci] = c.get("libepci", "?")
+    print(f"      {len(commune_to_epci):,} communes / {len(epci_to_communes):,} EPCI"
+          .replace(",", " "))
 
-    n_com = sum(1 for cg, _ in data if len(cg) == 5)
-    n_epci = sum(1 for cg, _ in data if len(cg) == 9)
-    print(f"  → {n_com:,} communes + {n_epci:,} EPCI extraites".replace(",", " "))
+    # 2. BPE — écoles et équipements, rangés par DEPCOM
+    print(f"\n[2/5] Lecture BPE24.csv (1.4 Go)...")
+    t0 = time.time()
+    ecoles_raw = []
+    equipements_raw = []
+    with open(BPE, "r", encoding="utf-8", errors="replace") as f:
+        reader = csv.DictReader(f, delimiter=";", quotechar='"')
+        for i, row in enumerate(reader, 1):
+            if i % 500000 == 0:
+                print(f"      {i:,} lignes ({time.time()-t0:.0f}s)...".replace(",", " "))
+            depcom = (row.get("DEPCOM") or "").strip()
+            if depcom not in commune_to_epci:
+                continue
+            x = parse_num(row.get("LAMBERT_X"))
+            y = parse_num(row.get("LAMBERT_Y"))
+            if x is None or y is None:
+                continue
+            typequ = (row.get("TYPEQU") or "").strip()
+            if typequ in TYPEQU_ECOLES:
+                ecoles_raw.append((x, y, depcom))
+            if typequ in EQUIPEMENTS_QUOTIDIEN:
+                equipements_raw.append((x, y, depcom))
+    print(f"      {len(ecoles_raw):,} écoles C108, {len(equipements_raw):,} équipements"
+          .replace(",", " "))
 
-    out = Path(__file__).resolve().parent.parent / "backend" / "data" / f"filosofi_revenu_{year}.csv"
-    out.parent.mkdir(parents=True, exist_ok=True)
+    # 3. Conversion Lambert93 -> LAEA en batch
+    print(f"\n[3/5] Conversion Lambert93 -> LAEA (batch)...")
+    ecoles_par_depcom = defaultdict(list)
+    equipements_par_depcom = defaultdict(list)
+    if ecoles_raw:
+        ex, ey, ed = zip(*ecoles_raw)
+        ex_l, ey_l = to_laea.transform(ex, ey)
+        for x, y, d in zip(ex_l, ey_l, ed):
+            ecoles_par_depcom[d].append((x, y))
+    if equipements_raw:
+        qx, qy, qd = zip(*equipements_raw)
+        qx_l, qy_l = to_laea.transform(qx, qy)
+        for x, y, d in zip(qx_l, qy_l, qd):
+            equipements_par_depcom[d].append((x, y))
 
-    with open(out, "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["CODGEO", f"revenu_median_{year}"])
-        for cg, med in sorted(data):
-            w.writerow([cg, med])
+    # 4. Carreaux — rangés par DEPCOM
+    print(f"\n[4/5] Lecture carreaux_200m_met.csv (447 Mo)...")
+    t0 = time.time()
+    carreaux_par_depcom = defaultdict(list)
+    with open(CARREAUX, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader, 1):
+            if i % 1000000 == 0:
+                print(f"      {i:,} carreaux ({time.time()-t0:.0f}s)...".replace(",", " "))
+            lcog = (row.get("lcog_geo") or "").strip()
+            depcom = lcog.split("|")[0] if lcog else ""
+            if depcom not in commune_to_epci:
+                continue
+            try:
+                ind = float(row.get("ind") or 0)
+            except ValueError:
+                continue
+            x, y = parse_idcar(row.get("idcar_200m"))
+            if x is None:
+                continue
+            carreaux_par_depcom[depcom].append((x, y, ind))
+    print(f"      Lecture en {time.time()-t0:.1f}s")
 
-    print(f"\n✓ Sortie : {out}")
-    print(f"  Taille : {out.stat().st_size / 1024:.1f} Ko")
+    # 5. Calcul commune par commune (pool d'écoles = toutes celles de l'EPCI),
+    #    puis agrégation EPCI à partir des sommes communales.
+    print(f"\n[5/5] Calcul dispersion (communes + agrégat EPCI)...")
+    t0 = time.time()
+    rayon_sq = RAYON_M ** 2
+    results_communes = []
+    results_epci = []
+
+    for i, epci_code in enumerate(sorted(epci_to_communes.keys()), 1):
+        if i % 100 == 0:
+            print(f"      {i}/{len(epci_to_communes)} EPCI ({time.time()-t0:.0f}s)...")
+
+        communes = epci_to_communes[epci_code]
+        ecoles = [e for c in communes for e in ecoles_par_depcom.get(c, [])]
+        libepci = epci_libelles.get(epci_code, "?")
+
+        # accumulateurs EPCI
+        epci_pop_in = epci_pop_tot = 0.0
+        epci_eq_in = epci_eq_tot = 0
+        epci_n_carreaux = 0
+
+        for ccode in communes:
+            car_c = carreaux_par_depcom.get(ccode, [])
+            eq_c = equipements_par_depcom.get(ccode, [])
+            epci_n_carreaux += len(car_c)
+
+            if ecoles:
+                pop_in, pop_tot = _pop_in_buffer(car_c, ecoles, rayon_sq)
+                eq_in, eq_tot = _count_in_buffer(eq_c, ecoles, rayon_sq)
+            else:
+                pop_in, pop_tot = 0.0, sum(ind for _, _, ind in car_c)
+                eq_in, eq_tot = 0, len(eq_c)
+
+            results_communes.append({
+                "codgeo": ccode,
+                "libgeo": commune_lib.get(ccode, "?"),
+                "code_epci": epci_code,
+                "n_ecoles_epci": len(ecoles),
+                "n_equipements": eq_tot,
+                "n_carreaux": len(car_c),
+                "pop_insee": round(pop_tot),
+                "pct_habitat_zone_ecole_15": _pct(pop_in, pop_tot) if ecoles else None,
+                "pct_equipements_zone_ecole_15": _pct(eq_in, eq_tot) if ecoles else None,
+            })
+
+            epci_pop_in += pop_in
+            epci_pop_tot += pop_tot
+            epci_eq_in += eq_in
+            epci_eq_tot += eq_tot
+
+        results_epci.append({
+            "code_epci": epci_code,
+            "libepci": libepci,
+            "n_communes": len(communes),
+            "n_ecoles_c108": len(ecoles),
+            "n_equipements": epci_eq_tot,
+            "n_carreaux": epci_n_carreaux,
+            "pop_insee": round(epci_pop_tot),
+            "pct_habitat_zone_ecole_15": _pct(epci_pop_in, epci_pop_tot) if ecoles else None,
+            "pct_equipements_zone_ecole_15": _pct(epci_eq_in, epci_eq_tot) if ecoles else None,
+        })
+
+    print(f"      Calcul total en {time.time()-t0:.1f}s")
+
+    # Sorties CSV
+    OUTPUT_COMMUNES.parent.mkdir(parents=True, exist_ok=True)
+    fields_com = ["codgeo", "libgeo", "code_epci", "n_ecoles_epci", "n_equipements",
+                  "n_carreaux", "pop_insee",
+                  "pct_habitat_zone_ecole_15", "pct_equipements_zone_ecole_15"]
+    with open(OUTPUT_COMMUNES, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields_com)
+        w.writeheader()
+        w.writerows(results_communes)
+    print(f"\n✓ Écrit : {OUTPUT_COMMUNES}  ({len(results_communes):,} communes)".replace(",", " "))
+
+    fields_epci = ["code_epci", "libepci", "n_communes", "n_ecoles_c108", "n_equipements",
+                   "n_carreaux", "pop_insee",
+                   "pct_habitat_zone_ecole_15", "pct_equipements_zone_ecole_15"]
+    with open(OUTPUT_EPCI, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields_epci)
+        w.writeheader()
+        w.writerows(results_epci)
+    print(f"✓ Écrit : {OUTPUT_EPCI}  ({len(results_epci):,} EPCI)".replace(",", " "))
+
+    # Vérification sur les 5 EPCI pilotes + dispersion intra-EPCI
+    temoins = {
+        "241700434": "CA La Rochelle", "200067213": "CU Grand Reims",
+        "245804406": "CA Nevers", "200067106": "CA Pays Basque",
+        "200067932": "CA Vannes",
+    }
+    print(f"\n--- Vérification 5 EPCI pilotes (valeur EPCI + écart entre communes) ---")
+    com_by_epci = defaultdict(list)
+    for r in results_communes:
+        com_by_epci[r["code_epci"]].append(r)
+    for code, name in temoins.items():
+        e = next((x for x in results_epci if x["code_epci"] == code), None)
+        if not e:
+            print(f"  {code} {name} : absent")
+            continue
+        habs = [c["pct_habitat_zone_ecole_15"] for c in com_by_epci.get(code, [])
+                if c["pct_habitat_zone_ecole_15"] is not None]
+        ecart = f"{min(habs):.0f}–{max(habs):.0f}%" if habs else "n/a"
+        print(f"  {code} {name:<18} EPCI habitat={e['pct_habitat_zone_ecole_15']}%  "
+              f"communes: {ecart} (n={len(habs)})")
 
 
 if __name__ == "__main__":
