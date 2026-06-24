@@ -142,12 +142,40 @@ out geom;
     return {"type": "FeatureCollection", "features": features}
 
 
+def get_gares(bbox: tuple) -> dict:
+    """Gares et haltes ferroviaires dans une bbox."""
+    s, w, n, e = bbox
+    key = f"gares_{s:.3f}_{w:.3f}_{n:.3f}_{e:.3f}"
+    query = f"""
+[out:json][timeout:25];
+(
+  node["railway"="station"]({s},{w},{n},{e});
+  node["railway"="halt"]({s},{w},{n},{e});
+);
+out body;
+"""
+    data = _overpass_query(query, key)
+    if not data or "_error" in data:
+        return {"type": "FeatureCollection", "features": [], "_error": data.get("_error") if data else "?"}
+    features = []
+    for el in data.get("elements", []):
+        if el.get("type") != "node":
+            continue
+        tags = el.get("tags", {})
+        features.append({
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [el["lon"], el["lat"]]},
+            "properties": {"nom": tags.get("name", "Gare"), "type": "gare"},
+        })
+    return {"type": "FeatureCollection", "features": features}
+
+
 def get_layers_for_territoire(territoire: dict, layers: list = None) -> dict:
     """
     Agrège les couches demandées pour un territoire.
-    layers : liste parmi ["tc", "velo"]. Si None, toutes.
+    layers : liste parmi ["tc", "velo", "gares"]. Si None, toutes.
     """
-    layers = layers or ["tc", "velo"]
+    layers = layers or ["tc", "velo", "gares"]
     result = {}
 
     bbox = _compute_bbox_from_territoire(territoire)
@@ -156,6 +184,8 @@ def get_layers_for_territoire(territoire: dict, layers: list = None) -> dict:
         result["tc"] = get_tc_arrets(bbox)
     if "velo" in layers and bbox:
         result["velo"] = get_cyclable(bbox)
+    if "gares" in layers and bbox:
+        result["gares"] = get_gares(bbox)
     return result
 
 
@@ -204,41 +234,47 @@ def _flatten(coords, lons: list, lats: list) -> None:
 # ════════════════════════════════════════════════════════════
 # DENSITÉ COMMUNES — choropleth (option A cartographie)
 # ════════════════════════════════════════════════════════════
-_DENSITE_CACHE = {"indicateurs": None, "bpe": None}
+_DENSITE_CACHE = {"indicateurs": None, "bpe": None, "age": None, "filo": None}
 
 def _load_densite_data():
     """Charge en mémoire les CSV nécessaires au calcul de densité (lazy)."""
     import csv
     from pathlib import Path
+    base = Path(__file__).parent.parent / "data"
+
+    def _load(name, key_col):
+        d = {}
+        try:
+            with open(base / name, encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    code = (row.get(key_col) or "").strip()
+                    if code:
+                        d[code] = row
+        except FileNotFoundError:
+            pass
+        return d
 
     if _DENSITE_CACHE["indicateurs"] is None:
-        ind_path = Path(__file__).parent.parent / "data" / "indicateurs_export.csv"
-        ind = {}
-        with open(ind_path, encoding="utf-8") as f:
-            for row in csv.DictReader(f):
-                code = (row.get("CODGEO") or "").strip()
-                if code:
-                    ind[code] = row
-        _DENSITE_CACHE["indicateurs"] = ind
-
+        _DENSITE_CACHE["indicateurs"] = _load("indicateurs_export.csv", "CODGEO")
     if _DENSITE_CACHE["bpe"] is None:
-        bpe_path = Path(__file__).parent.parent / "data" / "bpe_communes.csv"
-        bpe = {}
-        with open(bpe_path, encoding="utf-8") as f:
-            for row in csv.DictReader(f):
-                code = (row.get("CODGEO") or "").strip()
-                if code:
-                    bpe[code] = row
-        _DENSITE_CACHE["bpe"] = bpe
+        _DENSITE_CACHE["bpe"] = _load("bpe_communes.csv", "CODGEO")
+    if _DENSITE_CACHE["age"] is None:
+        _DENSITE_CACHE["age"] = _load("age_communes.csv", "CODGEO")
+    if _DENSITE_CACHE["filo"] is None:
+        # filosofi : clé en minuscules
+        _DENSITE_CACHE["filo"] = _load("filosofi_communes.csv", "codgeo")
 
-    return _DENSITE_CACHE["indicateurs"], _DENSITE_CACHE["bpe"]
+    return (_DENSITE_CACHE["indicateurs"], _DENSITE_CACHE["bpe"],
+            _DENSITE_CACHE["age"], _DENSITE_CACHE["filo"])
 
 
 def _compute_valeur_densite(code_commune: str, type_densite: str) -> Optional[float]:
-    """Calcule la valeur d'un indicateur de densité pour une commune."""
-    ind_data, bpe_data = _load_densite_data()
+    """Calcule la valeur d'un indicateur cartographiable pour une commune."""
+    ind_data, bpe_data, age_data, filo_data = _load_densite_data()
     ind = ind_data.get(code_commune)
     bpe = bpe_data.get(code_commune)
+    age = age_data.get(code_commune)
+    filo = filo_data.get(code_commune)
     if not ind:
         return None
 
@@ -248,27 +284,66 @@ def _compute_valeur_densite(code_commune: str, type_densite: str) -> Optional[fl
         except (ValueError, TypeError):
             return None
 
+    pop = _to_float(ind.get("P21_POP"))
+
+    # ── indicateurs par habitant / en % / en € (pas besoin de la surface) ──
+    if type_densite == "ges":  # émissions routières / hab (dépendance auto)
+        route = _to_float(ind.get("ROUTE"))
+        return round(route / pop, 2) if (route is not None and pop) else None
+
+    if type_densite == "ges_total":  # GES totales (hors transport) / hab
+        g = _to_float(ind.get("GES_tot_HorsTransp"))
+        return round(g / pop, 2) if (g is not None and pop) else None
+
+    if type_densite == "energie":  # consommation énergétique / hab
+        e = _to_float(ind.get("ENERGIE"))
+        return round(e / pop, 2) if (e is not None and pop) else None
+
+    if type_densite == "seniors":  # part des 60 ans et + (%)
+        if not age:
+            return None
+        ap = _to_float(age.get("P21_POP"))
+        vieux = sum(_to_float(age.get(c)) or 0 for c in ("P21_POP6074", "P21_POP7589", "P21_POP90P"))
+        return round(100 * vieux / ap, 1) if ap else None
+
+    if type_densite == "jeunes":  # part des moins de 15 ans (%)
+        if not age:
+            return None
+        ap = _to_float(age.get("P21_POP"))
+        j = _to_float(age.get("P21_POP0014"))
+        return round(100 * j / ap, 1) if (ap and j is not None) else None
+
+    if type_densite == "revenu":  # revenu médian disponible (€)
+        if not filo:
+            return None
+        rev = _to_float(filo.get("revenu_median"))
+        return round(rev, 0) if rev else None
+
+    # ── densités par km² (nécessitent la surface) ──
     surf_km2 = _to_float(ind.get("SURFKM2"))
     if not surf_km2 or surf_km2 <= 0:
         return None
 
-    if type_densite == "pop":
-        # hab/km²
-        pop = _to_float(ind.get("P21_POP"))
+    if type_densite == "pop":  # hab/km²
         return round(pop / surf_km2, 1) if pop else None
 
-    if type_densite == "equip":
-        # équipements/km²
-        total = _to_float(bpe.get("total")) if bpe else None
-        return round(total / surf_km2, 2) if total else 0.0
+    if type_densite == "equip":  # équipements BPE / km²
+        v = _to_float(bpe.get("total")) if bpe else None
+        return round(v / surf_km2, 2) if v else 0.0
 
-    if type_densite == "sante":
-        # équipements santé/km²
-        sante = _to_float(bpe.get("sante")) if bpe else None
-        return round(sante / surf_km2, 3) if sante else 0.0
+    if type_densite == "sante":  # équipements santé / km²
+        v = _to_float(bpe.get("sante")) if bpe else None
+        return round(v / surf_km2, 3) if v else 0.0
 
-    if type_densite == "artif":
-        # % artificialisé (CLC11 en hectares, surface en km², 1 km² = 100 ha)
+    if type_densite == "commerces":  # commerces / km²
+        v = _to_float(bpe.get("commerces")) if bpe else None
+        return round(v / surf_km2, 3) if v else 0.0
+
+    if type_densite == "enseignement":  # établissements d'enseignement / km²
+        v = _to_float(bpe.get("enseignement")) if bpe else None
+        return round(v / surf_km2, 3) if v else 0.0
+
+    if type_densite == "artif":  # % artificialisé (CLC11 ha ; 1 km² = 100 ha)
         clc = _to_float(ind.get("TOTALCLC11"))
         if clc is None:
             return None

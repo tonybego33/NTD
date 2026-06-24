@@ -5,10 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Empreintes · Nos territoires décarbonés — AREP</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
@@ -29,9 +25,9 @@
         <defs>
           
           <radialGradient id="globeOceanGrad" cx="0.35" cy="0.3" r="0.85">
-            <stop offset="0%"  stop-color="#d4dfe6"/>
-            <stop offset="60%" stop-color="#a4bcc9"/>
-            <stop offset="100%" stop-color="#7a98aa"/>
+            <stop offset="0%"  stop-color="#cfdde6"/>
+            <stop offset="60%" stop-color="#93b4c6"/>
+            <stop offset="100%" stop-color="#638da3"/>
           </radialGradient>
         </defs>
 
@@ -47,7 +43,6 @@
   <div class="intro-grain"></div>
 
   <div class="intro-typo">
-    <div class="intro-eyebrow">Diagnostic territorial · GT&nbsp;BDDe</div>
     <div class="intro-title-wrap">
       <h1 class="intro-title" id="introTitle"></h1>
     </div>
@@ -209,7 +204,7 @@
         </svg>
         <svg class="emc2b-pillar-icon" viewBox="0 0 24 24" fill="currentColor">
           <path d="M 19.5 13.5 Q 20.5 12.5, 20 11 Q 20 9, 17.5 8.7 Q 17.5 6, 14.5 6 Q 12.5 4.5, 10.5 6 Q 8.5 5.5, 7.5 7.7 Q 5 8, 5 10 Q 4 11.5, 5 13.5 Q 5.5 14, 6.5 14 L 19 14 Q 19.5 14, 19.5 13.5 Z"/>
-          <text x="12" y="12.8" font-family="Inter, sans-serif" font-size="5" font-weight="700" fill="#fbf9f2" text-anchor="middle" letter-spacing="-0.04em">CO<tspan font-size="3.6" dy="1.2">2</tspan></text>
+          <text x="12" y="12.8" font-family="'Segoe UI', system-ui, sans-serif" font-size="5" font-weight="700" fill="#fbf9f2" text-anchor="middle" letter-spacing="-0.04em">CO<tspan font-size="3.6" dy="1.2">2</tspan></text>
         </svg>
       </span>
       <span class="emc2b-text">
@@ -274,20 +269,6 @@
   <div hidden="true">
   </div>
 
-  <div class="intro-corner intro-corner-tl">
-    <div class="intro-coord">
-      <div class="intro-coord-line"><span class="intro-coord-dot"></span><strong>v0.4</strong> · mai 2026</div>
-      <div style="margin-top: 4px; opacity: .7;">Prototype expérimental · GT BDDe</div>
-    </div>
-  </div>
-
-  <div class="intro-corner intro-corner-tr">
-    <div class="intro-tag">
-      <span class="intro-tag-line"><span class="intro-tag-dot"></span> Données INSEE · ADEME · IGN</span>
-      <span class="intro-tag-line">52 indicateurs · 6 dimensions · 1 254 EPCI</span>
-    </div>
-  </div>
-
   <div class="intro-corner intro-corner-bl">
     <div class="intro-arep">
       <img src="assets/arep-logo.png" alt="AREP">
@@ -296,19 +277,6 @@
         <strong>Empreintes</strong>
         Pôle Conseil &amp; Programmation
       </span>
-    </div>
-  </div>
-
-  <div class="intro-corner intro-corner-br">
-    <div class="intro-credits">
-      <div class="intro-credits-line">
-        <span class="intro-credits-label">À partir du groupe de travail BDDe</span>
-        <em>Fabien&nbsp;Rosa, X, Y</em>
-      </div>
-      <div class="intro-credits-line">
-        <span class="intro-credits-label">Outil développé par</span>
-        <em>Tony&nbsp;Bego</em>
-      </div>
     </div>
   </div>
 
@@ -364,178 +332,62 @@
 </header>
 
 <div id="view-cartographie">
-  <header class="carto-header">
-    <div class="carto-header-left">
-      <button class="carto-back" onclick="closeCartographie(event)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        Retour au diagnostic
-      </button>
-      <span class="carto-divider"></span>
-      <h1 class="carto-title">Cartographie territoriale</h1>
-      <span class="carto-subtitle" id="cartoTerritoire">Aucun territoire sélectionné</span>
-    </div>
-    <div class="carto-header-right">
-      <div class="header-search" style="position:relative">
-        <input type="text" id="cartoSearchInput" placeholder="Chercher une ville, un EPCI…" autocomplete="off" />
-        <button onclick="cartoSearch()" aria-label="Rechercher">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </button>
+
+  <header class="carto-hdr">
+    <a href="#" class="carto-hdr-brand" onclick="closeCartographie(event)">
+      <img src="/assets/arep-logo.png" alt="AREP" onerror="this.style.display='none'">
+      <span class="carto-hdr-div"></span>
+      <span class="carto-hdr-lockup">
+        <span class="carto-hdr-name">Empreintes</span>
+        <span class="carto-hdr-sub">Nos territoires décarbonés</span>
+      </span>
+    </a>
+    <nav class="carto-hdr-nav">
+      <a href="#" data-nav="diagnostic" onclick="closeCartographie(event)">Diagnostic</a>
+      <a href="#" data-nav="cartographie" class="active" onclick="event.preventDefault()">Cartographie</a>
+      <a href="#" data-nav="methodologie" onclick="cartoGoMethodo(event)">Méthodologie</a>
+      <a href="#" data-nav="indicateurs" onclick="event.preventDefault()">Indicateurs</a>
+      <a href="#" data-nav="ressources" onclick="event.preventDefault()">Ressources</a>
+    </nav>
+    <div class="carto-hdr-aux">
+      <span class="carto-hdr-context" id="cartoTerritoireLabel"></span>
+      <div class="carto-hdr-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="cartoSearchInput" placeholder="Ville, EPCI, code…" autocomplete="off">
         <div class="search-dropdown" id="cartoSearchDropdown" hidden></div>
       </div>
     </div>
   </header>
 
-  <div class="carto-layout">
+  <div class="carto-body">
     <div id="cartoMap"></div>
 
-    <aside class="carto-sidebar">
-      <div class="carto-sidebar-section">
-        <div class="carto-sidebar-title">Calques</div>
-        <div class="carto-layer-list">
-
-          <label class="carto-layer">
-            <input type="checkbox" id="cartoLayer-contour" checked onchange="toggleCartoLayer('contour', this)">
-            <span class="carto-layer-color" style="background: var(--accent)"></span>
-            <span class="carto-layer-label">Contour territoire</span>
-          </label>
-
-          <label class="carto-layer">
-            <input type="checkbox" id="cartoLayer-communes" onchange="toggleCommunesContour(this)">
-            <span class="carto-layer-color" style="background: #888"></span>
-            <span class="carto-layer-label">Tracé communes</span>
-          </label>
-
-          <label class="carto-layer">
-            <input type="checkbox" id="cartoLayer-communesNames" onchange="toggleCommunesNames(this)">
-            <span class="carto-layer-color" style="background: transparent; border: 1px dashed #999"></span>
-            <span class="carto-layer-label">Noms communes</span>
-          </label>
-
-          <label class="carto-layer">
-            <input type="checkbox" id="cartoLayer-ecoles" onchange="toggleCartoLayer('ecoles', this)">
-            <span class="carto-layer-color" style="background: #c1623a"></span>
-            <span class="carto-layer-label">Écoles</span>
-          </label>
-
-          <div class="carto-layer-buffer" id="bufferCtrl-ecoles" hidden>
-            <label class="carto-buffer-label">Buffer <span id="bufferVal-ecoles">0</span> km</label>
-            <input type="range" class="carto-buffer-slider" id="bufferSlider-ecoles"
-                   min="0" max="3000" step="100" value="0"
-                   oninput="updateBuffer('ecoles', this.value)">
-          </div>
-          <label class="carto-layer">
-            <input type="checkbox" id="cartoLayer-velo" onchange="toggleCartoLayer('velo', this)">
-            <span class="carto-layer-color" style="background: #4a6b3a"></span>
-            <span class="carto-layer-label">Pistes cyclables</span>
-          </label>
-
-          <label class="carto-layer">
-            <input type="checkbox" id="cartoLayer-tc" onchange="toggleCartoLayer('tc', this)">
-            <span class="carto-layer-color" style="background: #5b7da6"></span>
-            <span class="carto-layer-label">Arrêts transports collectifs</span>
-          </label>
-
-          <div class="carto-layer-buffer" id="bufferCtrl-tc" hidden>
-            <label class="carto-buffer-label">Buffer <span id="bufferVal-tc">0</span> km</label>
-            <input type="range" class="carto-buffer-slider" id="bufferSlider-tc"
-                   min="0" max="3000" step="100" value="0"
-                   oninput="updateBuffer('tc', this.value)">
-          </div>
-          <label class="carto-layer">
-            <input type="checkbox" id="cartoLayer-sante" onchange="toggleCartoLayer('sante', this)">
-            <span class="carto-layer-color" style="background: #c1623a"></span>
-            <span class="carto-layer-label">Santé (médecins + pharma.)</span>
-          </label>
-
-          <div class="carto-layer-buffer" id="bufferCtrl-sante" hidden>
-            <label class="carto-buffer-label">Buffer <span id="bufferVal-sante">0</span> km</label>
-            <input type="range" class="carto-buffer-slider" id="bufferSlider-sante"
-                   min="0" max="3000" step="100" value="0"
-                   oninput="updateBuffer('sante', this.value)">
-          </div>
-          <label class="carto-layer">
-            <input type="checkbox" id="cartoLayer-commerces" onchange="toggleCartoLayer('commerces', this)">
-            <span class="carto-layer-color" style="background: #a35d2a"></span>
-            <span class="carto-layer-label">Commerces (boulang. + super.)</span>
-          </label>
-
-          <div class="carto-layer-buffer" id="bufferCtrl-commerces" hidden>
-            <label class="carto-buffer-label">Buffer <span id="bufferVal-commerces">0</span> km</label>
-            <input type="range" class="carto-buffer-slider" id="bufferSlider-commerces"
-                   min="0" max="3000" step="100" value="0"
-                   oninput="updateBuffer('commerces', this.value)">
-          </div>
-        </div>
+    <div class="maptools">
+      <div class="basemap-switch">
+        <button data-base="light" class="on">Clair</button>
+        <button data-base="plan">Plan</button>
+        <button data-base="relief">Relief</button>
+        <button data-base="satellite">Satellite</button>
       </div>
+      <div class="legend-pill"><span class="n" id="lpCount">—</span>&nbsp;<span id="lpLab">communes</span></div>
+    </div>
 
-            <div class="carto-sidebar-section">
-        <div class="carto-sidebar-title">Densité (choropleth)</div>
-        <div class="carto-layer-list">
-
-          <label class="carto-layer">
-            <input type="radio" name="densite" value="" checked onchange="setDensiteLayer('')">
-            <span class="carto-layer-label">Aucune</span>
-          </label>
-
-          <div style="font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-4); letter-spacing: 0.06em; text-transform: uppercase; margin: 8px 0 4px;">Choropleth (commune)</div>
-
-          <label class="carto-layer">
-            <input type="radio" name="densite" value="pop" onchange="setDensiteLayer('pop')">
-            <span class="carto-layer-color" style="background: linear-gradient(90deg, #fef3e8, #b85a36)"></span>
-            <span class="carto-layer-label">Population (hab/km²)</span>
-          </label>
-
-          <label class="carto-layer">
-            <input type="radio" name="densite" value="artif" onchange="setDensiteLayer('artif')">
-            <span class="carto-layer-color" style="background: linear-gradient(90deg, #f0ede5, #4a4f58)"></span>
-            <span class="carto-layer-label">% artificialisé</span>
-          </label>
-
-          <div style="font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-4); letter-spacing: 0.06em; text-transform: uppercase; margin: 12px 0 4px;">Heatmap (points)</div>
-
-          <label class="carto-layer">
-            <input type="radio" name="densite" value="heat-equip" onchange="setDensiteLayer('heat-equip')">
-            <span class="carto-layer-color" style="background: linear-gradient(90deg, transparent, #b58832, #c1623a)"></span>
-            <span class="carto-layer-label">Équipements (tous)</span>
-          </label>
-
-          <label class="carto-layer">
-            <input type="radio" name="densite" value="heat-sante" onchange="setDensiteLayer('heat-sante')">
-            <span class="carto-layer-color" style="background: linear-gradient(90deg, transparent, #d97a2e, #a04020)"></span>
-            <span class="carto-layer-label">Santé</span>
-          </label>
-
-          <label class="carto-layer">
-            <input type="radio" name="densite" value="heat-commerces" onchange="setDensiteLayer('heat-commerces')">
-            <span class="carto-layer-color" style="background: linear-gradient(90deg, transparent, #c19828, #a35d2a)"></span>
-            <span class="carto-layer-label">Commerces</span>
-          </label>
-
+    <div class="rail">
+      <div class="panel">
+        <div class="panel-h">
+          <div class="lab">Angle de lecture</div>
+          <div class="ttl">Que veut-on voir&nbsp;?</div>
         </div>
-        <div class="carto-legend-note" id="densiteLegend" style="margin-top: 10px; display: none;">
-          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-bottom: 4px;">
-            Échelle <span id="densiteLegendUnit"></span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span id="densiteLegendMin" style="font-size: 10px; color: var(--ink-3);">0</span>
-            <div id="densiteLegendBar" style="flex: 1; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #fef3e8, #b85a36);"></div>
-            <span id="densiteLegendMax" style="font-size: 10px; color: var(--ink-3);">100</span>
-          </div>
-        </div>
+        <div class="lens-list" id="lensList"></div>
+        <div class="ctrl-div" id="ctrlDiv" hidden></div>
+        <div class="ctrl" id="lensCtrl"></div>
       </div>
+      <div class="panel">
+        <div class="toggles" id="baseToggles"></div>
+      </div>
+    </div>
 
-      <div class="carto-sidebar-section">
-        <div class="carto-sidebar-title">Légende</div>
-        <div class="carto-legend-note">Coche pour activer un calque sur la carte.<br>Les calques se superposent dans l'ordre d'activation.</div>
-      </div>
-
-      <div class="carto-sidebar-footer">
-        <div class="carto-sources-title">Sources</div>
-        <div class="carto-sources-text">
-          geo.api.gouv.fr · IGN Admin Express 2024 · OpenStreetMap · BPE INSEE 2024 · GT BDDe AREP
-        </div>
-      </div>
-    </aside>
+    <div class="insight" id="cartoInsight"></div>
   </div>
 </div>
 
@@ -555,12 +407,14 @@
         Un diagnostic territorial <strong>multicritère</strong> qui croise structure démographique,
         accès aux équipements, mobilité et empreinte environnementale pour lire
         <strong>comment un territoire s'organise</strong> et où se jouent ses <strong>marges de sobriété</strong>.
-        Données officielles <strong>INSEE, ADEME et IGN</strong>.
+        Chaque indicateur est chiffré, puis comparé à la <strong>moyenne nationale</strong> et aux <strong>territoires de même type</strong>.
+      </p>
+      <p class="hero-sub" style="margin-top:14px;font-size:13.5px;color:var(--ink-4)">
+        Sources officielles et publiques : <strong>INSEE</strong> (Recensement 2021, Filosofi, Mobilités MOBPRO), <strong>BPE</strong> 2023, <strong>ADEME</strong>, <strong>IGN</strong>, <strong>Corine Land Cover</strong>.
       </p>
     </div>
 
     <div class="search-block">
-      <div class="search-label"><span class="dot"></span><span>Explorer un territoire</span></div>
       <div class="search-box" id="heroSearchCard">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="text" id="heroSearchInput" placeholder="Ville, EPCI, ou code INSEE / SIREN…" autocomplete="off">
@@ -580,15 +434,32 @@
 </div>
 
 <div id="view-methodologie">
-  <div class="methodo-topbar">
-    <div class="wrap methodo-topbar-inner">
-      <button class="methodo-back" onclick="closeMethodologie(event)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        Retour au diagnostic
-      </button>
-      <span class="methodo-topbar-title">Méthodologie &middot; GT BDDe</span>
+
+  <header class="site-header methodo-siteheader">
+    <div class="wrap site-header-inner">
+      <a href="#" class="brand" onclick="closeMethodologie(event)">
+        <img src="/assets/arep-logo.png" alt="AREP" class="brand-arep" onerror="this.closest('.brand').classList.add('no-logo')">
+        <span class="brand-arep-txt">AREP</span>
+        <span class="brand-div"></span>
+        <span class="brand-lockup">
+          <span class="brand-name">Empreintes</span>
+          <span class="brand-sub">Nos territoires décarbonés</span>
+        </span>
+      </a>
+      <nav class="main-nav">
+        <a href="#" class="nav-link" onclick="closeMethodologie(event)">Diagnostic</a>
+        <a href="#" class="nav-link" onclick="closeMethodologie(event); openCartographie(event)">Cartographie</a>
+        <a href="#" class="nav-link is-active">Méthodologie</a>
+        <a href="#" class="nav-link">Indicateurs</a>
+        <a href="#" class="nav-link">Ressources</a>
+      </nav>
+      <div class="header-aux">
+        <button class="header-replay" title="Rejouer l'intro" onclick="replayIntro()" aria-label="Rejouer l'intro">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
     </div>
-  </div>
+  </header>
 
   <div class="methodo-scroll">
     <div class="wrap methodo-layout">
@@ -598,10 +469,11 @@
         <div class="methodo-toc-label">Sommaire</div>
         <nav class="methodo-toc-nav">
           <a href="#m-pourquoi" class="methodo-toc-link is-active">Pourquoi cet outil</a>
-          <a href="#m-lecture" class="methodo-toc-link">Comment lire les scores</a>
-          <a href="#m-dimensions" class="methodo-toc-link">Les 6 dimensions</a>
-          <a href="#m-indicateurs" class="methodo-toc-link">Détail des indicateurs</a>
-          <a href="#m-ponderations" class="methodo-toc-link">Pondérations</a>
+          <a href="#m-lecture" class="methodo-toc-link">Lire le diagnostic</a>
+          <a href="#m-dimensions" class="methodo-toc-link">Les six dimensions</a>
+          <a href="#m-methodes" class="methodo-toc-link">Méthodes de calcul</a>
+          <a href="#m-comparaison" class="methodo-toc-link">Comparaison et pairs</a>
+          <a href="#m-sources" class="methodo-toc-link">Sources et millésimes</a>
           <a href="#m-precautions" class="methodo-toc-link">Précautions de lecture</a>
           <a href="#m-roadmap" class="methodo-toc-link">En développement</a>
         </nav>
@@ -612,199 +484,252 @@
 
         <!-- Hero -->
         <header class="methodo-hero">
-          <div class="methodo-hero-eyebrow">Note méthodologique</div>
-          <h1 class="methodo-hero-title">Comment Empreintes mesure le potentiel de décarbonation des territoires</h1>
-          <p class="methodo-hero-lede">Empreintes croise organisation urbaine et performance environnementale pour évaluer la capacité structurelle d’un territoire à réduire sa dépendance à la voiture. Cette note explique la démarche, les données, et les précautions de lecture.</p>
+          <div class="methodo-hero-eyebrow">Note méthodologique &middot; version 1</div>
+          <h1 class="methodo-hero-title">Lire la forme des territoires pour éclairer la programmation urbaine</h1>
+          <p class="methodo-hero-lede">Empreintes est un outil de diagnostic territorial. Pour une commune ou une intercommunalité, il rassemble une trentaine d'indicateurs de structure urbaine, d'accessibilité, de mobilité et d'empreinte environnementale, puis les situe par rapport à la moyenne nationale et aux territoires de même densité. L'objectif n'est pas de classer ni de juger, mais de rendre visibles les atouts et les marges de manœuvre d'un territoire, pour nourrir un travail de programmation. Cette note explique la démarche, le détail de chaque calcul, les sources et les précautions de lecture.</p>
         </header>
 
         <!-- 1. POURQUOI -->
         <section class="methodo-section" id="m-pourquoi">
           <div class="methodo-section-num">01</div>
           <h2 class="methodo-section-title">Pourquoi cet outil</h2>
-          <p>Le projet est parti d’un constat de terrain. En étudiant la Communauté d’agglomération de La Rochelle, l’équipe d’AREP (Fabien Rosa) a observé qu’un habitat compact change radicalement le rapport à la voiture : près de 70 % de la population y réside à moins de 1,5 km d’une école élémentaire. Quand l’école, les commerces et les services sont à distance de marche, la voiture cesse d’être une obligation pour chaque déplacement du quotidien.</p>
-          <p>De cette intuition est nee une question simple : <strong>peut-on généraliser ce diagnostic à tous les territoires français, de façon reproductible et objectivée ?</strong> Plutôt que de juger un territoire sur des impressions, Empreintes mesure ce qui, dans sa forme urbaine et son organisation, favorise ou freine un fonctionnement plus sobre en carbone.</p>
+          <p>Le projet est parti d'un constat de terrain. En étudiant la Communauté d'agglomération de La Rochelle, l'équipe d'AREP a observé qu'un habitat compact change le rapport quotidien à la voiture : une large part de la population y réside à moins de 1,5 km d'une école élémentaire, donc à distance de marche du cœur de vie historique. Quand l'école, les commerces et les services sont accessibles à pied, la voiture cesse d'être une obligation pour chaque déplacement.</p>
+          <p>De ce constat est née une question simple : <strong>peut-on objectiver, pour n'importe quel territoire français et de façon reproductible, ce qui dans sa forme et son organisation favorise ou freine un fonctionnement plus sobre&nbsp;?</strong> Plutôt que de raisonner à l'impression, Empreintes mesure ces caractéristiques structurelles et les rend comparables d'un territoire à l'autre.</p>
+
           <div class="methodo-callout is-intuition">
-            <div class="methodo-callout-label">L’intuition fondatrice</div>
-            <p>La dépendance à la voiture n’est pas une fatalité individuelle : elle est largement déterminée par la structure du territoire. Un territoire compact, bien équipé et bien desservi offre des alternatives. Un territoire étalé les rend difficiles. Empreintes cherche à rendre cette structure visible et comparable.</p>
+            <div class="methodo-callout-label">L'intuition fondatrice</div>
+            <p>La dépendance à la voiture n'est pas qu'un choix individuel : elle est largement déterminée par la structure du territoire. Un territoire compact, équipé et desservi offre des alternatives. Un territoire étalé les rend difficiles. Empreintes cherche à rendre cette structure lisible et comparable, sans la confondre avec une responsabilité des habitants.</p>
           </div>
-          <p>L’outil s’adresse d’abord aux équipes d’AREP, et à terme aux élus et aux autorités organisatrices de la mobilité (AOM) qui cherchent à objectiver les leviers d’action sur leur territoire.</p>
+
+          <h3 class="methodo-subhead">Un outil au service de la programmation, pas un palmarès</h3>
+          <p>Empreintes s'inscrit dans une démarche de programmation urbaine. Il ne s'agit pas de dresser un classement des bons et des mauvais territoires, ni de stigmatiser les communes étalées ou rurales, qui répondent à des logiques d'habitat et d'histoire qui leur sont propres. Il s'agit de <strong>repérer des potentiels et des leviers</strong> : où la structure existante permet déjà d'agir vite, où au contraire les conditions d'un report modal restent à construire, et quelles caractéristiques distinguent un territoire de ses semblables.</p>
+          <p>Cette lecture est volontairement comparative et neutre. Un même chiffre se lit différemment selon le type de territoire : c'est pourquoi l'outil compare toujours un territoire à ses pairs de densité comparable, et non à un idéal théorique unique qui pénaliserait mécaniquement le périurbain et le rural.</p>
+
+          <h3 class="methodo-subhead">Une première version, parmi d'autres possibles</h3>
+          <p>L'outil s'adresse d'abord aux équipes d'AREP, puis, à terme, aux élus et aux autorités organisatrices de la mobilité (AOM) qui cherchent à objectiver leurs leviers d'action. Ce qui est présenté ici est une <strong>version 1</strong> : un socle de diagnostic comparatif. D'autres dimensions sont à l'étude, notamment une dimension de <strong>prospective et de simulation</strong>, qui permettrait de tester l'effet attendu d'une décision d'aménagement (densifier un secteur, implanter un équipement, renforcer une desserte) sur le profil du territoire. Cette orientation est encore en discussion et ne figure pas dans cette version : Empreintes n'est aujourd'hui qu'au premier état de ce qu'il pourrait devenir.</p>
         </section>
 
-        <!-- 2. COMMENT LIRE -->
+        <!-- 2. LIRE LE DIAGNOSTIC -->
         <section class="methodo-section" id="m-lecture">
           <div class="methodo-section-num">02</div>
-          <h2 class="methodo-section-title">Comment lire les scores</h2>
-          <p>Empreintes propose <strong>deux lectures complémentaires</strong> d’un même territoire. Elles ne mesurent pas la même chose et se lisent ensemble.</p>
+          <h2 class="methodo-section-title">Lire le diagnostic</h2>
+          <p>Le diagnostic n'attribue pas de note globale. Pour chaque indicateur, il affiche la <strong>valeur réelle</strong> du territoire, accompagnée de deux repères de comparaison et, le cas échéant, de son rang. Trois éléments à lire ensemble.</p>
 
           <div class="methodo-twocol">
             <div class="methodo-score-card is-primary">
-              <div class="methodo-score-card-tag">Lecture principale</div>
-              <h3>Le potentiel de décarbonation</h3>
-              <p class="methodo-score-card-sub">La grande jauge, notée sur 100.</p>
-              <p>Cette note répond à la question : <em>ce territoire dispose-t-il des atouts structurels pour décarboner le quotidien ?</em> Elle additionne un <strong>capital d’atouts</strong> (densité, compacité, variété des équipements, desserte ferroviaire, emploi local) puis en retranche une <strong>pression</strong> (dynamique d’artificialisation liée à la croissance démographique).</p>
-              <p>Une note haute signifie que le territoire réunit les conditions d’un fonctionnement plus sobre, même s’il reste des efforts à fournir.</p>
+              <div class="methodo-score-card-tag">Ce que vous lisez d'abord</div>
+              <h3>La valeur du territoire</h3>
+              <p class="methodo-score-card-sub">Le chiffre en grand, dans son unité réelle.</p>
+              <p>Chaque indicateur est donné dans son unité concrète : habitants au km², pourcentage de trajets en voiture, tonnes de CO<sub>2</sub> par habitant, mètres carrés artificialisés par habitant, etc. C'est la donnée brute du territoire, telle qu'elle ressort des sources publiques.</p>
             </div>
 
             <div class="methodo-score-card">
-              <div class="methodo-score-card-tag">Lecture complémentaire</div>
-              <h3>Le profil multidimensionnel</h3>
-              <p class="methodo-score-card-sub">Le radar et le score indicatif, sur 100.</p>
-              <p>Cette lecture montre le territoire <em>tel qu’il est</em>, sur six dimensions : structure urbaine, accessibilité, mobilité, environnement, socio-économie, gouvernance. Elle dresse un portrait de ses forces et de ses faiblesses, dimension par dimension.</p>
-              <p>Le score multidimensionnel est une moyenne pondérée de ces six dimensions. Il est affiché à titre indicatif, pour situer le territoire face à ses pairs.</p>
+              <div class="methodo-score-card-tag">Pour situer ce chiffre</div>
+              <h3>Deux repères et un rang</h3>
+              <p class="methodo-score-card-sub">France, pairs, et position relative.</p>
+              <p>Sous chaque valeur figurent deux traits de repère : la <strong>moyenne nationale</strong> et la moyenne des <strong>pairs</strong> (les territoires de même niveau de densité). Une puce de rang précise la position du territoire, par exemple <em>nat.&nbsp;420<sup>e</sup>/1&nbsp;254 &middot; pairs&nbsp;12<sup>e</sup>/88</em>, où 1 désigne toujours la situation la plus favorable sur l'indicateur.</p>
             </div>
           </div>
 
           <div class="methodo-callout is-key">
-            <div class="methodo-callout-label">Un point essentiel : des scores relatifs</div>
-            <p>Les scores ne sont pas des notes absolues. Ils expriment une <strong>position relative</strong> : où se situe le territoire par rapport aux autres territoires de même type (grand pôle urbain, pôle moyen, territoire multipolarisé, hors influence des pôles). Un score de 70 signifie que le territoire fait mieux que 70 % de ses pairs sur le critère considéré, pas qu’il atteint 70 % d’un idéal théorique.</p>
+            <div class="methodo-callout-label">Le principe : une lecture relative et par famille</div>
+            <p>Empreintes ne dit pas «&nbsp;ce territoire est bon ou mauvais&nbsp;». Il dit «&nbsp;sur tel critère, ce territoire se situe ici par rapport aux autres&nbsp;». Et surtout, il le dit par rapport aux <strong>territoires comparables</strong>. Une commune rurale n'est pas comparée à une métropole, mais aux autres communes de densité voisine. Un repère au-dessus de la moyenne des pairs signale un atout structurel sur lequel s'appuyer ; un repère en dessous, un levier à travailler.</p>
           </div>
         </section>
 
         <!-- 3. DIMENSIONS -->
         <section class="methodo-section" id="m-dimensions">
           <div class="methodo-section-num">03</div>
-          <h2 class="methodo-section-title">Les 6 dimensions</h2>
-          <p>Le profil d’un territoire se décompose en six dimensions. Chacune regroupe plusieurs indicateurs et reçoit un poids dans le score multidimensionnel.</p>
+          <h2 class="methodo-section-title">Les six dimensions</h2>
+          <p>Les indicateurs sont regroupés en six familles thématiques. Ce regroupement organise la lecture ; il ne donne pas lieu à un score agrégé.</p>
 
           <div class="methodo-dim-grid">
             <div class="methodo-dim-card">
               <div class="methodo-dim-card-head"><span class="methodo-dim-card-num">01</span><h3>Structure urbaine</h3></div>
-              <p>La forme du territoire : densité de population, densité sur le sol réellement bâti, part des actifs. Une structure dense et compacte rapproche les fonctions du quotidien et réduit les distances.</p>
+              <p>La forme du territoire : densité de population, densité sur le sol réellement bâti, structure par âge, compacité (part des habitants proches d'une école). Une structure dense et compacte rapproche les fonctions du quotidien.</p>
             </div>
             <div class="methodo-dim-card">
               <div class="methodo-dim-card-head"><span class="methodo-dim-card-num">02</span><h3>Accessibilité</h3></div>
-              <p>La proximité des équipements : commerces, santé, enseignement, sport et culture. Plus l’offre est dense et variée, plus les besoins se satisfont sans voiture.</p>
+              <p>La proximité des services : socle d'équipements essentiels, densité et variété des commerces, de la santé, de l'enseignement, du sport et de la culture. Plus l'offre est présente et variée, plus les besoins se satisfont sans voiture.</p>
             </div>
             <div class="methodo-dim-card">
               <div class="methodo-dim-card-head"><span class="methodo-dim-card-num">03</span><h3>Mobilité</h3></div>
-              <p>Le rapport réel à la voiture : part des trajets domicile-travail en voiture, taux de ménages multi-motorisés. C’est la traduction concrète de la dépendance automobile.</p>
+              <p>Le rapport réel à la voiture : part des trajets domicile-travail en voiture, en transports en commun, à pied et à vélo, taux de ménages multi-motorisés. La traduction concrète de la dépendance automobile.</p>
             </div>
             <div class="methodo-dim-card">
-              <div class="methodo-dim-card-head"><span class="methodo-dim-card-num">04</span><h3>Environnement</h3></div>
-              <p>L’empreinte carbone et foncière : émissions de gaz à effet de serre (transport et total), consommation d’énergie, artificialisation des sols. Le cœur du sujet.</p>
+              <div class="methodo-dim-card-head"><span class="methodo-dim-card-num">04</span><h3>Artificialisation &amp; GES</h3></div>
+              <p>L'empreinte foncière et carbone : artificialisation des sols et sa ventilation par usage, émissions de gaz à effet de serre (totales et transport), consommation d'énergie. Le cœur du sujet environnemental.</p>
             </div>
             <div class="methodo-dim-card">
               <div class="methodo-dim-card-head"><span class="methodo-dim-card-num">05</span><h3>Socio-économie</h3></div>
-              <p>La capacité à agir : revenu médian, part des actifs, taux de pauvreté. Cette dimension n’évalue pas la richesse en soi, mais les moyens dont dispose un territoire pour mener sa transition.</p>
+              <p>Le contexte et les moyens : revenu médian, part des actifs, taux de pauvreté, écarts de revenus. Cette dimension n'évalue pas la richesse comme une qualité, mais éclaire la capacité d'un territoire à financer et conduire sa transition.</p>
             </div>
             <div class="methodo-dim-card">
               <div class="methodo-dim-card-head"><span class="methodo-dim-card-num">06</span><h3>Gouvernance</h3></div>
-              <p>L’engagement local : densité du tissu associatif (proxy du capital social) et nombre d’installations solaires (proxy de la dynamique citoyenne de transition).</p>
+              <p>L'engagement local : densité du tissu associatif (approche du capital social), production solaire (dynamique de transition). Cette dimension sera complétée par une saisie qualitative renseignée à la main.</p>
             </div>
           </div>
         </section>
 
-        <!-- 4. INDICATEURS -->
-        <section class="methodo-section" id="m-indicateurs">
+        <!-- 4. METHODES DE CALCUL -->
+        <section class="methodo-section" id="m-methodes">
           <div class="methodo-section-num">04</div>
-          <h2 class="methodo-section-title">Détail des indicateurs</h2>
-          <p>Chaque indicateur provient d’une source publique de référence. La colonne <em>Sens</em> indique si une valeur élevée est favorable (un meilleur potentiel de décarbonation) ou défavorable.</p>
+          <h2 class="methodo-section-title">Méthodes de calcul</h2>
+          <p>Chaque indicateur repose sur une donnée publique de référence et une règle de calcul explicite. Voici, indicateur par indicateur, ce qui est mesuré et comment.</p>
+
+          <div class="methodo-method">
+            <h3>Densité de population</h3>
+            <p>Population municipale rapportée à la superficie du territoire, en habitants par km². Calcul direct à partir du recensement INSEE et des surfaces administratives. Indicateur de base de la forme urbaine.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Densité sur le sol bâti</h3>
+            <p>Population rapportée non pas à toute la superficie, mais à la seule surface artificialisée (issue de Corine Land Cover). Cette densité «&nbsp;nette&nbsp;» neutralise les vastes espaces naturels ou agricoles : deux territoires de même densité brute peuvent avoir des tissus bâtis très différents. C'est un meilleur reflet de la compacité réelle du bâti.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>À moins de 1,5 km d'une école</h3>
+            <p>Indicateur de compacité et de marchabilité, inspiré du diagnostic mené sur La Rochelle. Il croise deux sources : la localisation des écoles élémentaires (code C108 de la Base permanente des équipements, géolocalisée) et la population au carreau de 200 m (grille carroyée Filosofi, où chaque carreau porte le nombre d'habitants).</p>
+            <p>On trace un rayon de 1,5 km autour de chaque école, puis on additionne la population des carreaux qui tombent dans au moins un de ces rayons. Le résultat est la <strong>part de la population résidant à moins de 1,5 km d'une école élémentaire</strong>. Le même principe s'applique aux équipements du quotidien.</p>
+            <div class="methodo-note-inline">
+              <strong>Le cas «&nbsp;entre deux écoles&nbsp;».</strong> Les zones de 1,5 km forment une union, pas une addition. Un carreau est compté dès qu'il est à portée d'au moins une école, et il n'est jamais comptabilisé deux fois s'il relève de plusieurs. Deux écoles proches ne gonflent donc pas le chiffre : leurs zones se recouvrent simplement. Un secteur situé à plus de 1,5 km de toutes les écoles n'est pas couvert. Le seuil de 1,5 km correspond à environ vingt minutes de marche, distance classique de marchabilité ; l'école élémentaire sert de marqueur du centre de vie historique.</div>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Socle d'équipements essentiels</h3>
+            <p>Mesure la diversité des services de base présents, et non leur nombre. Le socle est défini par un référentiel de <strong>31 types d'équipements</strong> du quotidien (codes BPE), répartis en six familles : services (mairie, poste, banque...), commerces (boulangerie, boucherie, supermarché, épicerie...), écoles, santé (médecin, pharmacie, centre et maison de santé...), équipements collectifs (crèche, sport, bibliothèque). Chaque type reçoit un <strong>poids</strong> selon son importance, défini avec l'équipe.</p>
+            <p>Pour une commune, on regarde la présence ou l'absence de chaque type (qu'il y ait une ou dix boulangeries ne change rien), on additionne les poids des types présents, et on rapporte ce total au poids maximal possible. À l'échelle intercommunale, on fait la moyenne des communes pondérée par leur population. Le chiffre s'interprète comme un <strong>taux de couverture relatif</strong> : la santé et certains commerces y pèsent le plus, et un territoire n'atteint jamais 100&nbsp;% car certains équipements sont quasi exclusifs (supermarché ou supérette, par exemple). À comparer entre territoires, donc, plus qu'en absolu.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Densité et variété des équipements</h3>
+            <p>À partir de la Base permanente des équipements (BPE), on compte les équipements de chaque famille (commerces, santé, enseignement, sport et culture) et on les rapporte à la population, en nombre pour 10&nbsp;000 habitants. La <strong>variété</strong> compte, elle, le nombre de familles d'équipements différentes présentes : un territoire peut être dense en un seul type d'équipement sans offrir la diversité nécessaire à une vie de proximité complète.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Mobilité domicile-travail</h3>
+            <p>Issus du fichier MOBPRO de l'INSEE (déplacements domicile-travail des actifs), ces indicateurs donnent la répartition des modes de déplacement : part de la voiture, des transports en commun, de la marche, du vélo, ainsi que le taux de ménages disposant d'au moins deux voitures. C'est la mesure la plus directe de la dépendance automobile effective. À noter : ces parts décrivent les seuls trajets domicile-travail, pas l'ensemble des déplacements.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Émissions de gaz à effet de serre</h3>
+            <p>À partir des inventaires territoriaux de l'ADEME, les émissions sont rapportées à la population, en tonnes de CO<sub>2</sub> équivalent par habitant. Deux lectures sont proposées : les <strong>émissions totales</strong> hors transport longue distance, et les <strong>émissions du secteur transport</strong>, plus directement liées à la forme urbaine et aux mobilités. Une ventilation par secteur (résidentiel, tertiaire, industrie, agriculture, route...) accompagne le total.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Consommation d'énergie</h3>
+            <p>Toujours d'après l'ADEME, la consommation finale d'énergie du territoire rapportée à la population. Indicateur complémentaire des émissions, sensible au parc de logements et au tissu d'activités.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Artificialisation des sols</h3>
+            <p>La surface artificialisée du territoire est rapportée à la population, en mètres carrés par habitant : à population égale, un territoire étalé artificialise davantage. L'outil affiche aussi l'<strong>évolution récente</strong> de l'artificialisation (suivi des espaces naturels, agricoles et forestiers consommés entre 2009 et 2023) et sa <strong>ventilation par usage</strong> : part dédiée à l'habitat, aux infrastructures, et aux autres usages. Une part d'artificialisation très orientée habitat ne se lit pas comme une artificialisation d'activité.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Revenus et situation socio-économique</h3>
+            <p>Issus du dispositif Filosofi de l'INSEE : revenu médian disponible par unité de consommation, taux de pauvreté, écart entre les plus hauts et les plus bas revenus (rapport interdécile), part des ménages imposés. Ces indicateurs décrivent le contexte et les moyens du territoire, sans préjuger de son potentiel de décarbonation : un territoire aisé mais étalé peut très bien présenter peu d'alternatives à la voiture.</p>
+          </div>
+
+          <div class="methodo-method">
+            <h3>Tissu associatif et production solaire</h3>
+            <p>La densité associative (nombre d'associations actives pour 1&nbsp;000 habitants, d'après le registre national des associations) approche le capital social et la capacité d'initiative locale. La production solaire (installations et puissance rapportées à la population, d'après les registres ouverts de l'énergie) approche la dynamique de transition déjà engagée. Ces approximations seront complétées par une saisie qualitative renseignée à la main.</p>
+          </div>
+        </section>
+
+        <!-- 5. COMPARAISON ET PAIRS -->
+        <section class="methodo-section" id="m-comparaison">
+          <div class="methodo-section-num">05</div>
+          <h2 class="methodo-section-title">Comparaison et territoires de référence</h2>
+          <p>Une valeur seule ne dit rien. 18 m² artificialisés par habitant, est-ce beaucoup&nbsp;? Tout dépend du type de territoire. La méthode de comparaison est donc au cœur de l'outil.</p>
+
+          <h3 class="methodo-subhead">Deux repères pour chaque valeur</h3>
+          <p>Chaque indicateur est comparé à deux références : la <strong>moyenne nationale</strong>, qui situe le territoire dans l'ensemble français, et la <strong>moyenne des pairs</strong>, qui le situe parmi les territoires qui lui ressemblent. La seconde est la plus parlante pour la programmation : elle évite de pénaliser mécaniquement le rural ou le périurbain en les confrontant à des métropoles.</p>
+
+          <h3 class="methodo-subhead">Qui sont les «&nbsp;pairs&nbsp;»</h3>
+          <p>Les pairs sont les territoires de même <strong>niveau de densité</strong>, au sens de la grille de densité communale de l'INSEE, qui distingue sept degrés, du plus dense (cœurs urbains) au plus diffus (rural très peu dense). Comparer un territoire à ses semblables de densité, c'est comparer ce qui est comparable : une commune dense se mesure aux autres communes denses, une intercommunalité rurale aux autres intercommunalités rurales.</p>
+
+          <h3 class="methodo-subhead">Le rang</h3>
+          <p>La puce de rang traduit cette position en clair : <em>nat.&nbsp;X<sup>e</sup>/N</em> donne le classement parmi tous les territoires français de même maille, <em>pairs&nbsp;Y<sup>e</sup>/M</em> parmi les seuls territoires de densité comparable. Le rang 1 correspond toujours à la situation la plus favorable au regard de l'indicateur : une faible part de voiture, une faible artificialisation, une forte densité d'équipements seront classées en tête, selon le sens propre à chaque critère.</p>
+
+          <div class="methodo-callout is-key">
+            <div class="methodo-callout-label">Pas de note unique, et c'est volontaire</div>
+            <p>L'outil n'agrège plus les indicateurs en un score global pondéré. Réunir des dimensions hétérogènes (forme urbaine, émissions, revenus) dans un seul chiffre revient à fixer des arbitrages contestables et masque la richesse du diagnostic. Empreintes privilégie une lecture <strong>indicateur par indicateur</strong>, où chaque mesure conserve son sens et son unité, et où la comparaison reste transparente.</p>
+          </div>
+        </section>
+
+        <!-- 6. SOURCES ET MILLESIMES -->
+        <section class="methodo-section" id="m-sources">
+          <div class="methodo-section-num">06</div>
+          <h2 class="methodo-section-title">Sources et millésimes</h2>
+          <p>Toutes les données proviennent de sources publiques de référence. La colonne <em>Sens</em> indique si une valeur élevée est plutôt favorable ou défavorable au regard d'un fonctionnement sobre.</p>
 
           <div class="methodo-table-wrap">
             <table class="methodo-table">
               <thead>
-                <tr><th>Indicateur</th><th>Dimension</th><th>Source</th><th>Sens</th></tr>
+                <tr><th>Indicateur</th><th>Source</th><th>Millésime</th><th>Sens</th></tr>
               </thead>
               <tbody>
-                <tr><td>Densité de population</td><td>Structure</td><td>INSEE</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Densité sur sol bâti</td><td>Structure</td><td>Corine Land Cover</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Part des 30-44 ans</td><td>Structure</td><td>INSEE (RP)</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Équipements (total / 10 000 hab)</td><td>Accessibilité</td><td>INSEE (BPE)</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Commerces, santé, enseignement, sport-culture</td><td>Accessibilité</td><td>INSEE (BPE)</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Part voiture domicile-travail</td><td>Mobilité</td><td>INSEE (MOBPRO)</td><td><span class="sens-neg">élevé = moins bien</span></td></tr>
-                <tr><td>Taux de double motorisation</td><td>Mobilité</td><td>INSEE (MOBPRO)</td><td><span class="sens-neg">élevé = moins bien</span></td></tr>
-                <tr><td>GES transport / habitant</td><td>Environnement</td><td>ADEME</td><td><span class="sens-neg">élevé = moins bien</span></td></tr>
-                <tr><td>GES total / habitant</td><td>Environnement</td><td>ADEME</td><td><span class="sens-neg">élevé = moins bien</span></td></tr>
-                <tr><td>Consommation d’énergie / habitant</td><td>Environnement</td><td>ADEME</td><td><span class="sens-neg">élevé = moins bien</span></td></tr>
-                <tr><td>Artificialisation / habitant</td><td>Environnement</td><td>IGN / CLC</td><td><span class="sens-neg">élevé = moins bien</span></td></tr>
-                <tr><td>Part de l’artificialisation pour l’habitat</td><td>Environnement</td><td>IGN / CLC</td><td><span class="sens-neg">élevé = moins bien</span></td></tr>
-                <tr><td>Revenu médian</td><td>Socio-économie</td><td>INSEE (Filosofi)</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Part des actifs</td><td>Socio-économie</td><td>INSEE (Filosofi)</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Taux de pauvreté</td><td>Socio-économie</td><td>INSEE (Filosofi)</td><td><span class="sens-neg">élevé = moins bien</span></td></tr>
-                <tr><td>Part des ménages imposés</td><td>Socio-économie</td><td>INSEE (Filosofi)</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Densité associative (/ 1 000 hab)</td><td>Gouvernance</td><td>RNA Waldec</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
-                <tr><td>Installations solaires (/ 1 000 hab)</td><td>Gouvernance</td><td>Registre ODRE</td><td><span class="sens-pos">élevé = mieux</span></td></tr>
+                <tr><td>Densité de population</td><td>INSEE, recensement</td><td>2021</td><td><span class="sens-pos">élevé = atout</span></td></tr>
+                <tr><td>Densité sur sol bâti</td><td>Corine Land Cover</td><td>2018</td><td><span class="sens-pos">élevé = atout</span></td></tr>
+                <tr><td>Structure par âge</td><td>INSEE, recensement</td><td>2021</td><td><span class="sens-neutre">descriptif</span></td></tr>
+                <tr><td>Habitants à moins de 1,5 km d'une école</td><td>BPE + Filosofi carroyé 200 m</td><td>2024 / 2021</td><td><span class="sens-pos">élevé = atout</span></td></tr>
+                <tr><td>Socle d'équipements essentiels</td><td>BPE (31 types pondérés)</td><td>2024</td><td><span class="sens-pos">élevé = atout</span></td></tr>
+                <tr><td>Densité et variété des équipements</td><td>INSEE, BPE</td><td>2024</td><td><span class="sens-pos">élevé = atout</span></td></tr>
+                <tr><td>Parts modales domicile-travail</td><td>INSEE, MOBPRO</td><td>2021</td><td><span class="sens-neutre">selon le mode</span></td></tr>
+                <tr><td>Taux de double motorisation</td><td>INSEE, MOBPRO</td><td>2021</td><td><span class="sens-neg">élevé = contrainte</span></td></tr>
+                <tr><td>GES totaux et transport / hab.</td><td>ADEME, inventaires</td><td>millésime ADEME</td><td><span class="sens-neg">élevé = contrainte</span></td></tr>
+                <tr><td>Consommation d'énergie / hab.</td><td>ADEME</td><td>millésime ADEME</td><td><span class="sens-neg">élevé = contrainte</span></td></tr>
+                <tr><td>Artificialisation / hab. et ventilation</td><td>IGN (ENAF) / CLC</td><td>2009 à 2023</td><td><span class="sens-neg">élevé = contrainte</span></td></tr>
+                <tr><td>Revenu médian, pauvreté, écarts</td><td>INSEE, Filosofi</td><td>2021</td><td><span class="sens-neutre">contexte</span></td></tr>
+                <tr><td>Densité associative</td><td>RNA (registre des associations)</td><td>récent</td><td><span class="sens-pos">élevé = atout</span></td></tr>
+                <tr><td>Production solaire</td><td>Registres ouverts de l'énergie</td><td>récent</td><td><span class="sens-pos">élevé = atout</span></td></tr>
               </tbody>
             </table>
           </div>
+          <p class="methodo-source-note">La plupart des indicateurs sont des photographies à une date donnée (souvent 2021). Le suivi dans le temps n'est aujourd'hui disponible que pour la population et, prochainement, le revenu médian ; il dépend de la publication de millésimes comparables par les producteurs de données.</p>
         </section>
 
-        <!-- 5. PONDERATIONS -->
-        <section class="methodo-section" id="m-ponderations">
-          <div class="methodo-section-num">05</div>
-          <h2 class="methodo-section-title">Pondérations</h2>
-          <p>Le score multidimensionnel combine les six dimensions selon les poids ci-dessous. L’environnement et la forme urbaine pèsent le plus, car ils sont au cœur du potentiel de décarbonation. La socio-économie pèse peu : elle éclaire la faisabilité, sans dominer le diagnostic.</p>
-
-          <div class="methodo-weights">
-            <div class="methodo-weight-row"><span class="methodo-weight-name">Environnement</span><div class="methodo-weight-bar"><div class="methodo-weight-fill" style="--w:30%"></div></div><span class="methodo-weight-val">30 %</span></div>
-            <div class="methodo-weight-row"><span class="methodo-weight-name">Structure urbaine</span><div class="methodo-weight-bar"><div class="methodo-weight-fill" style="--w:20%"></div></div><span class="methodo-weight-val">20 %</span></div>
-            <div class="methodo-weight-row"><span class="methodo-weight-name">Accessibilité</span><div class="methodo-weight-bar"><div class="methodo-weight-fill" style="--w:20%"></div></div><span class="methodo-weight-val">20 %</span></div>
-            <div class="methodo-weight-row"><span class="methodo-weight-name">Mobilité</span><div class="methodo-weight-bar"><div class="methodo-weight-fill" style="--w:15%"></div></div><span class="methodo-weight-val">15 %</span></div>
-            <div class="methodo-weight-row"><span class="methodo-weight-name">Gouvernance</span><div class="methodo-weight-bar"><div class="methodo-weight-fill" style="--w:10%"></div></div><span class="methodo-weight-val">10 %</span></div>
-            <div class="methodo-weight-row"><span class="methodo-weight-name">Socio-économie</span><div class="methodo-weight-bar"><div class="methodo-weight-fill" style="--w:5%"></div></div><span class="methodo-weight-val">5 %</span></div>
-          </div>
-
-          <div class="methodo-callout is-warn">
-            <div class="methodo-callout-label">Pondérations pas encore calibrees</div>
-            <p>Ces poids résultent d’arbitrages méthodologiques en cours, pas d’une calibration statistique validée. Ils sont susceptibles d’évoluer au fil du travail avec l’équipe et des retours d’experts. Ils traduisent une hiérarchie de priorités, non une vérité scientifique établie.</p>
-          </div>
-        </section>
-
-        <!-- 6. PRECAUTIONS -->
+        <!-- 7. PRECAUTIONS -->
         <section class="methodo-section" id="m-precautions">
-          <div class="methodo-section-num">06</div>
+          <div class="methodo-section-num">07</div>
           <h2 class="methodo-section-title">Précautions de lecture</h2>
-          <p>Empreintes est un outil d’aide à l’objectivation, pas un verdict. Plusieurs limites doivent être gardées à l’esprit.</p>
+          <p>Empreintes est une aide à l'objectivation, pas un verdict. Plusieurs limites doivent être gardées à l'esprit.</p>
 
-          <div class="methodo-precaution"><h3>Des scores relatifs, pas absolus</h3><p>Un score élevé situe le territoire favorablement par rapport à ses pairs. Il ne dit pas que le territoire est performant dans l’absolu. Tous les territoires français restent très dépendants de la voiture : la comparaison se fait au sein de cette réalité commune.</p></div>
-          <div class="methodo-precaution"><h3>Deux mailles d’étude, peut-être biaisées</h3><p>Les indicateurs sont calculés à deux échelles : la commune et l’intercommunalité (EPCI). La comparaison par typologie peut introduire des biais, notamment quand un territoire est à la frontière entre deux catégories, ou quand une moyenne intercommunale masque de fortes disparités internes.</p></div>
-          <div class="methodo-precaution"><h3>Des indicateurs encore en attente</h3><p>Certains volets sont incomplets ou en cours d’intégration : enrichissement de la mobilité par les modes doux, label ADEME Territoire Engagé (non disponible en données ouvertes réutilisables), aménagements cyclables, densité de la tache urbaine. Le diagnostic s’affinera à mesure que ces données seront intégrées.</p></div>
-          <div class="methodo-precaution"><h3>La place de la socio-économie</h3><p>La dimension socio-économique ne mesure pas la richesse comme une qualité. Elle approche la capacité d’un territoire à financer et mener sa transition. Un territoire aisé mais étalé peut très bien présenter un faible potentiel de décarbonation.</p></div>
+          <div class="methodo-precaution"><h3>Une lecture relative, pas absolue</h3><p>Une bonne position situe le territoire favorablement par rapport à ses pairs ; elle ne dit pas qu'il est performant dans l'absolu. Tous les territoires français restent très dépendants de la voiture : la comparaison se fait à l'intérieur de cette réalité commune.</p></div>
+          <div class="methodo-precaution"><h3>Présence n'est pas accessibilité</h3><p>Le socle d'équipements mesure la présence d'un service dans la commune, pas la facilité d'y accéder. Une grande commune peut compter un médecin présent mais éloigné de nombreux habitants. L'indicateur de proximité aux écoles vient compléter cet angle mort, mais la lecture doit croiser les deux.</p></div>
+          <div class="methodo-precaution"><h3>Deux mailles, des effets de bord</h3><p>Les indicateurs sont calculés à deux échelles, la commune et l'intercommunalité. Une moyenne intercommunale peut masquer de fortes disparités internes, et un territoire à la frontière entre deux catégories de densité peut changer de groupe de pairs. Ces effets invitent à lire les chiffres comme des ordres de grandeur, non comme des mesures au point près.</p></div>
+          <div class="methodo-precaution"><h3>Des volets encore en attente</h3><p>Certains éléments sont partiels ou en cours d'intégration : enrichissement de la mobilité par les modes doux, aménagements cyclables, label de transition (non disponible en données ouvertes réutilisables), volet gouvernance à renseigner manuellement. Le diagnostic s'affinera à mesure que ces données seront intégrées.</p></div>
+          <div class="methodo-precaution"><h3>La place de la socio-économie</h3><p>La dimension socio-économique ne mesure pas la richesse comme une qualité. Elle approche les moyens dont dispose un territoire pour financer et conduire sa transition. Un territoire aisé mais étalé peut très bien présenter peu de potentiel de report modal.</p></div>
         </section>
 
-        <!-- 7. ROADMAP -->
+        <!-- 8. ROADMAP -->
         <section class="methodo-section" id="m-roadmap">
-          <div class="methodo-section-num">07</div>
+          <div class="methodo-section-num">08</div>
           <h2 class="methodo-section-title">En développement</h2>
-          <p>Empreintes est un outil vivant. Les chantiers ouverts à ce jour :</p>
+          <p>Empreintes est un outil vivant, à son premier état. Les chantiers ouverts à ce jour :</p>
           <ul class="methodo-roadmap">
-            <li><strong>Calibrage des pondérations</strong> avec l’équipe et des experts, pour passer d’arbitrages à une hiérarchie justifiée.</li>
-            <li><strong>Enrichissement de la mobilité</strong> : intégrer les parts de transports en commun, de marche et de vélo, aujourd’hui disponibles mais hors du score.</li>
-            <li><strong>Label ADEME et aménagements cyclables</strong> : à intégrer en saisie manuelle, faute de données ouvertes exploitables à l’échelle nationale.</li>
-            <li><strong>Densité de la tache urbaine</strong> : mesurer la densité sur la surface réellement bâtie plutôt que sur la surface administrative.</li>
-            <li><strong>Millésimes récents</strong> : actualiser les données démographiques au fur et à mesure des publications INSEE.</li>
+            <li><strong>Cartographie interactive</strong> : visualiser sur le territoire les équipements, les arrêts de transport, les aménagements cyclables et les zones de proximité.</li>
+            <li><strong>Volet gouvernance</strong> : un formulaire de saisie qualitative pour renseigner à la main les indicateurs sans donnée ouverte (engagements, politiques locales).</li>
+            <li><strong>Suivi dans le temps</strong> : étendre l'évolution au-delà de la population, à commencer par le revenu médian, au fil des millésimes disponibles.</li>
+            <li><strong>Enrichissement de la mobilité</strong> : intégrer pleinement les parts de transports en commun, de marche et de vélo dans la lecture.</li>
+            <li><strong>Dimension prospective et simulation</strong> : à l'étude, tester l'effet attendu d'une décision d'aménagement sur le profil du territoire. Encore en discussion, hors de cette version.</li>
           </ul>
           <div class="methodo-callout is-transparency">
             <div class="methodo-callout-label">Transparence par défaut</div>
-            <p>Empreintes affiche volontairement ses limites plutôt que de les masquer. Les badges (donnée en direct, démonstration, à brancher) signalent en permanence le statut de chaque donnée. Cette transparence est un choix de méthode, pas un aveu de faiblesse : un diagnostic crédible est un diagnostic dont on connaît les limites.</p>
+            <p>Empreintes affiche ses limites plutôt que de les masquer. Les statuts de données (en direct, démonstration, à brancher) signalent en permanence l'état de chaque source. Cette transparence est un choix de méthode : un diagnostic crédible est un diagnostic dont on connaît les limites.</p>
           </div>
         </section>
 
         <footer class="methodo-footer">
           <p>Empreintes &middot; GT BDDe &middot; AREP, filiale SNCF Gares &amp; Connexions</p>
-          <p class="methodo-footer-sub">Note méthodologique provisoire, en cours de consolidation.</p>
+          <p class="methodo-footer-sub">Note méthodologique provisoire, en cours de consolidation. Version 1.</p>
         </footer>
 
       </main>
     </div>
   </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   <script src="/js/dev-tweaks.js"></script>
   <script src="/js/empreintes.js"></script>

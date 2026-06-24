@@ -1,4 +1,3 @@
-
 """
 Backend FastAPI du GT BDDe.
 
@@ -15,6 +14,7 @@ Lancement :
 """
 from __future__ import annotations
 
+import bisect
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
@@ -32,6 +32,7 @@ from .services import notation_points as notation_service
 from .services import filosofi as filosofi_service
 from .services import scoring as scoring_service
 from .services import carto as carto_service
+from .services import data_store
 
 
 DIMENSIONS_META = {
@@ -169,6 +170,14 @@ async def indicateurs(code: str):
         scoring = {}
         scoring_error = str(e)
 
+    # Niveau dens7 du territoire (pour le rang vs pairs de meme densite)
+    try:
+        _fiche_d7 = data_store.get_territoire(t)
+        _dens7 = _fiche_d7.get("dens7") if _fiche_d7 else None
+    except Exception:
+        _dens7 = None
+    _maille_d7 = "epci" if t.get("type") == "epci" else "commune"
+
     if "scores_indicateurs" in scoring:
         scores_ind = scoring["scores_indicateurs"]
         for dim_code, dim in dimensions.items():
@@ -185,6 +194,13 @@ async def indicateurs(code: str):
                     ind["n_national"] = s.get("n_national")
                     ind["quantiles"] = s["quantiles"]
                     ind["sens"] = s["sens"]
+                    # Rang vs pairs dens7 (additif, ne casse rien si absent du pickle)
+                    _val = s.get("valeur")
+                    if _dens7 is not None and _val is not None:
+                        _sd7 = data_store.get_sorted_values("dens7_" + str(_dens7), code, _maille_d7)
+                        if _sd7:
+                            ind["rang_dens7"] = round(100 * bisect.bisect_right(_sd7, _val) / len(_sd7), 1)
+                            ind["n_dens7"] = len(_sd7)
 
     if "scores_dimensions" in scoring:
         for dim_code, score_dim in scoring["scores_dimensions"].items():
@@ -353,7 +369,7 @@ async def carto(code: str, layers: Optional[str] = None):
 
     requested = None
     if layers:
-        requested = [x.strip() for x in layers.split(",") if x.strip() in ("tc", "velo")]
+        requested = [x.strip() for x in layers.split(",") if x.strip() in ("tc", "velo", "gares")]
     return carto_service.get_layers_for_territoire(t, requested)
 
 
@@ -374,6 +390,27 @@ async def get_densite(code: str, type: str = "pop"):
         raise HTTPException(status_code=404, detail="Territoire introuvable")
 
     return await carto_service.get_densite_communes_geojson(territoire, type)
+
+
+@app.get("/voisinage/{code}")
+async def get_voisinage(code: str, type: str = "pop", rayon: int = 0):
+    """GeoJSON des communes voisines (hors EPCI) dans un rayon autour du centroïde,
+    colorables sur la même échelle que la choroplèthe.
+
+    type  : pop | equip | sante | artif
+    rayon : km (0 = rien). Borné à 100 km.
+    """
+    if type not in ("pop", "equip", "sante", "artif"):
+        raise HTTPException(status_code=400, detail="type invalide (pop|equip|sante|artif)")
+    if rayon <= 0:
+        return {"type": "FeatureCollection", "features": []}
+    rayon = min(int(rayon), 100)
+
+    territoire = await geo_service.resolve(code)
+    if not territoire:
+        raise HTTPException(status_code=404, detail="Territoire introuvable")
+
+    return await carto_service.get_voisinage_geojson(territoire, type, rayon)
 
 
 @app.get("/app")
