@@ -1585,6 +1585,8 @@ function mqBuildData(t, payload) {
       socle: { v: V('taux_couverture_socle') || 0, fr: nat.couverture_socle || 0, pr: pairs.couverture_socle || 0 },
       ecoleHab: { v: V('pct_habitat_zone_ecole_15'), fr: nat.centralite_habitat_ecole || 0, pr: pairs.centralite_habitat_ecole || 0 },
       ecoleEq: { v: V('pct_equipements_zone_ecole_15'), fr: nat.centralite_equip_ecole || 0, pr: pairs.centralite_equip_ecole || 0 },
+      gareHab: { v: V('pct_habitat_gare_3'), fr: nat.centralite_habitat_gare || 0, pr: pairs.centralite_habitat_gare || 0 },
+      gareEq: { v: V('pct_equipements_gare_3'), fr: nat.centralite_equip_gare || 0, pr: pairs.centralite_equip_gare || 0 },
     },
     age, densite, equip, radar, mobil, env, socio,
   };
@@ -1657,11 +1659,8 @@ function mqRenderIdentity() {
       </div>
       <div class="acc-cell">${ecoleBloc}</div>
       <div class="acc-cell">
-        <div class="acc-head"><span class="acc-pic">${mqGareEcolePic('gare')}</span><span class="acc-title">À moins de 3 km d'une gare</span><span class="tag-todo">À brancher</span></div>
-        <div style="display:flex;flex-direction:column;gap:14px;margin-top:6px">
-          <div style="display:flex;justify-content:space-between"><span class="acc-pending">Habitants</span><span class="acc-pending">—</span></div>
-          <div style="display:flex;justify-content:space-between"><span class="acc-pending">Équipements</span><span class="acc-pending">—</span></div>
-        </div>
+        <div class="acc-head"><span class="acc-pic">${mqGareEcolePic('gare')}</span><span class="acc-title">À moins de 3 km d'une gare</span><span class="src">BPE 2024 · Filosofi 2021</span></div>
+        <div class="dual">${ecole('Habitants', ce.gareHab)}${ecole('Équipements', ce.gareEq)}${barLegend}<div class="acc-note">Part des habitants (et des équipements du quotidien) situés à moins de 3 km d'une gare de voyageurs. Marqueur de desserte ferroviaire du territoire.</div></div>
       </div>
     </div>
   </div>`;

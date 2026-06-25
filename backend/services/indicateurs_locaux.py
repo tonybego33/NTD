@@ -13,6 +13,8 @@ Le contrat de retour est inchangé pour ne rien casser côté frontend :
 from __future__ import annotations
 
 from typing import Optional
+import csv
+from pathlib import Path
 
 from . import data_store
 
@@ -149,6 +151,17 @@ INDICATEURS_DEF = [
      "unite": "%", "dimension": "struct", "format": "percent",
      "source": "Calcul AREP — BPE 2024",
      "description": "% des équipements du quotidien (commerces, services, santé, sport-culture) à moins de 1,5 km d'une école élémentaire."},
+    # ─── Proximité aux gares (jumeau du 1,5 km école, rayon 3 km) ───
+    {"code": "pct_habitat_gare_3", "key": "pct_habitat_gare_3",
+     "label": "Habitat à <3 km d'une gare",
+     "unite": "%", "dimension": "struct", "format": "percent",
+     "source": "Calcul AREP — BPE 2024 + Filosofi 2021 carroyé 200m",
+     "description": "% de la population résidant à moins de 3 km d'une gare de voyageurs (desserte ferroviaire)."},
+    {"code": "pct_equipements_gare_3", "key": "pct_equipements_gare_3",
+     "label": "Équipements à <3 km d'une gare",
+     "unite": "%", "dimension": "struct", "format": "percent",
+     "source": "Calcul AREP — BPE 2024",
+     "description": "% des équipements du quotidien à moins de 3 km d'une gare de voyageurs."},
     # ─── Score socle équipements (méthode Fabien Rosa, GT BDDe AREP) ───
     {"code": "taux_couverture_socle", "key": "taux_couverture_socle",
      "label": "Couverture socle équipements",
@@ -228,6 +241,55 @@ def _format_value(v: Optional[float], fmt: str) -> Optional[str]:
 # ============================================================================
 # Point d'entrée
 # ============================================================================
+_GARES_CACHE = None
+
+
+def _load_gares() -> dict:
+    global _GARES_CACHE
+    if _GARES_CACHE is not None:
+        return _GARES_CACHE
+    base = Path(__file__).resolve().parent.parent / "data"
+    out = {"commune": {}, "epci": {}}
+
+    def _f(x):
+        try:
+            return float(x)
+        except (TypeError, ValueError):
+            return None
+
+    def _read(path, keycol, dest):
+        if not path.exists():
+            return
+        with open(path, "r", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                code = (row.get(keycol) or "").strip()
+                if not code:
+                    continue
+                dest[code] = {
+                    "pct_habitat_gare_3": _f(row.get("pct_habitat_gare_3")),
+                    "pct_equipements_gare_3": _f(row.get("pct_equipements_gare_3")),
+                }
+
+    _read(base / "gares_dispersion_communes.csv", "codgeo", out["commune"])
+    _read(base / "gares_dispersion_epci.csv", "code_epci", out["epci"])
+    _GARES_CACHE = out
+    return out
+
+
+def _apply_gares(result: dict, territoire: dict) -> None:
+    gares = _load_gares()
+    maille = "epci" if territoire.get("type") == "epci" else "commune"
+    code = str(territoire.get("code") or "")
+    gv = gares.get(maille, {}).get(code)
+    if not gv:
+        return
+    for k in ("pct_habitat_gare_3", "pct_equipements_gare_3"):
+        if k in result and gv.get(k) is not None:
+            result[k]["valeur"] = gv[k]
+            result[k]["valeur_formatee"] = _format_value(gv[k], "percent")
+            result[k]["statut"] = "ok"
+
+
 def get_indicateurs(territoire: dict) -> dict:
     """Renvoie les indicateurs locaux pour un territoire (commune ou EPCI)."""
     try:
@@ -251,6 +313,8 @@ def get_indicateurs(territoire: dict) -> dict:
             "dimension": ind["dimension"],
             "statut": "ok" if val is not None else "indisponible",
         }
+
+    _apply_gares(result, territoire)
     return result
 
 
