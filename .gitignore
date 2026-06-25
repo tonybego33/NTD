@@ -43,4 +43,4 @@ Thumbs.db
 # au build (les CSV doivent être présents à ce moment-là).
 #
 # backend/data/*.csv
-# backend/data/precomputed.pkl.gz
+# backend/data/precomputed.pkl.gzdata_brut/

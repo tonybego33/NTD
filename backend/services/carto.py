@@ -231,6 +231,32 @@ def _load_densite_data():
                     bpe[code] = row
         _DENSITE_CACHE["bpe"] = bpe
 
+    if _DENSITE_CACHE.get("age") is None:
+        age_path = Path(__file__).parent.parent / "data" / "age_communes.csv"
+        age = {}
+        try:
+            with open(age_path, encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    code = (row.get("CODGEO") or "").strip()
+                    if code:
+                        age[code] = row
+        except FileNotFoundError:
+            pass
+        _DENSITE_CACHE["age"] = age
+
+    if _DENSITE_CACHE.get("filosofi") is None:
+        filo_path = Path(__file__).parent.parent / "data" / "filosofi_communes.csv"
+        filo = {}
+        try:
+            with open(filo_path, encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    code = (row.get("codgeo") or row.get("CODGEO") or "").strip()
+                    if code:
+                        filo[code] = row
+        except FileNotFoundError:
+            pass
+        _DENSITE_CACHE["filosofi"] = filo
+
     return _DENSITE_CACHE["indicateurs"], _DENSITE_CACHE["bpe"]
 
 
@@ -247,6 +273,46 @@ def _compute_valeur_densite(code_commune: str, type_densite: str) -> Optional[fl
             return float(str(v).replace(",", "."))
         except (ValueError, TypeError):
             return None
+
+    pop = _to_float(ind.get("P21_POP"))
+
+    if type_densite == "seniors":
+        age = _DENSITE_CACHE.get("age", {}).get(code_commune)
+        if not age or not pop:
+            return None
+        s60 = 0.0
+        for k in ("P21_POP6074", "P21_POP7589", "P21_POP90P"):
+            v = _to_float(age.get(k))
+            if v:
+                s60 += v
+        return round(100 * s60 / pop, 1)
+
+    if type_densite == "jeunes":
+        age = _DENSITE_CACHE.get("age", {}).get(code_commune)
+        if not age or not pop:
+            return None
+        j = _to_float(age.get("P21_POP0014"))
+        return round(100 * j / pop, 1) if j is not None else None
+
+    if type_densite == "revenu":
+        filo = _DENSITE_CACHE.get("filosofi", {}).get(code_commune)
+        if not filo:
+            return None
+        return _to_float(filo.get("revenu_median"))
+
+    if type_densite == "ges":
+        route = _to_float(ind.get("ROUTE"))
+        if route is None or not pop:
+            return None
+        return round(route / pop, 2)
+
+    if type_densite == "ges_total":
+        hors = _to_float(ind.get("GES_tot_HorsTransp")) or 0.0
+        route = _to_float(ind.get("ROUTE")) or 0.0
+        tot = hors + route
+        if not pop or tot <= 0:
+            return None
+        return round(tot / pop, 2)
 
     surf_km2 = _to_float(ind.get("SURFKM2"))
     if not surf_km2 or surf_km2 <= 0:
@@ -266,6 +332,10 @@ def _compute_valeur_densite(code_commune: str, type_densite: str) -> Optional[fl
         # équipements santé/km²
         sante = _to_float(bpe.get("sante")) if bpe else None
         return round(sante / surf_km2, 3) if sante else 0.0
+
+    if type_densite == "commerces":
+        com = _to_float(bpe.get("commerces")) if bpe else None
+        return round(com / surf_km2, 3) if com else 0.0
 
     if type_densite == "artif":
         # % artificialisé (CLC11 en hectares, surface en km², 1 km² = 100 ha)

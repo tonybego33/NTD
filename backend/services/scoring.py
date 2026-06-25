@@ -176,6 +176,16 @@ def get_scoring_for_territoire(territoire: dict,
         rang_typo = _percentile_rank(val, sorted_typo)
         rang_national = _percentile_rank(val, sorted_national)
 
+        # Rang vs pairs dens7 (meme type de densite que l'outil), additif et optionnel
+        dens7 = fiche.get("dens7")
+        rang_dens7 = None
+        n_dens7 = 0
+        if dens7 is not None:
+            sorted_dens7 = data_store.get_sorted_values("dens7_" + str(dens7), code, maille)
+            if sorted_dens7:
+                rang_dens7 = _percentile_rank(val, sorted_dens7)
+                n_dens7 = len(sorted_dens7)
+
         if rang_typo is None and rang_national is None:
             continue
 
@@ -188,6 +198,8 @@ def get_scoring_for_territoire(territoire: dict,
             "score_national": round(score_national, 1) if score_national is not None else None,
             "rang_typo": rang_typo,
             "rang_national": rang_national,
+            "rang_dens7": rang_dens7,
+            "n_dens7": n_dens7,
             "valeur": val,
             "quantiles": data_store.get_quantiles(groupe_effectif, code),
             "sens": sens,
