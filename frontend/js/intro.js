@@ -376,6 +376,28 @@ function closeMethodologie(e) {
   document.querySelectorAll('.nav-link').forEach((l, i) => l.classList.toggle('is-active', i === 0));
 }
 
+function openBiblio(e) {
+  e?.preventDefault();
+  if (typeof closeMethodologie === 'function') closeMethodologie();
+  if (typeof closeCartographie === 'function') closeCartographie();
+  const overlay = document.getElementById('view-biblio');
+  if (!overlay) return;
+  overlay.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('is-active'));
+  e?.currentTarget?.classList?.add('is-active');
+  overlay.querySelector('.biblio-scroll')?.scrollTo(0, 0);
+}
+
+function closeBiblio(e) {
+  e?.preventDefault();
+  const overlay = document.getElementById('view-biblio');
+  if (!overlay) return;
+  overlay.classList.remove('is-open');
+  document.body.style.overflow = '';
+  document.querySelectorAll('.nav-link').forEach((l, i) => l.classList.toggle('is-active', i === 0));
+}
+
 function setupMethodoScrollSpy() {
   const scroll = document.querySelector('.methodo-scroll');
   const links = document.querySelectorAll('.methodo-toc-link');

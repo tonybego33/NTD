@@ -1643,24 +1643,24 @@ function mqRenderIdentity() {
           <span class="gauge-tick pr" style="left:${mqDensPos(dn.pr).toFixed(0)}%"></span>
           <div class="gauge-marker" id="densMarkerId" data-pos="${mqDensPos(dn.v).toFixed(0)}" style="left:0%"></div>
         </div>
-        <div class="gauge-scale"><span>Très peu dense</span><span>Très dense</span></div>
+        
         <div class="bar-legend" style="margin-top:12px"><span class="bl-item"><i class="bl-tick fr"></i>France</span><span class="bl-item"><i class="bl-tick pr"></i>pairs</span></div>
         <div style="margin-top:10px">${mqRankChip(dn.rang)}</div>
       </div>
     </div>
     <div class="identity-foot">
       <div class="acc-cell">
-        <div class="acc-head"><span class="acc-pic">${mqGareEcolePic('socle')}</span><span class="acc-title">Socle d'équipements</span><span class="src">BPE 2024</span></div>
-        <div class="acc-big"><span class="v tabular">${mqComma((+ce.socle.v).toFixed(1))}</span><span class="u">% du socle</span></div>
+        <div class="acc-head"><span class="acc-pic">${mqGareEcolePic('socle')}</span><span class="acc-title">Équipements et services du quotidien</span><span class="src">BPE 2024</span></div>
+        <div class="acc-big"><span class="v tabular">${mqComma((+ce.socle.v).toFixed(1))}</span><span class="u">% sont présents dans la Commune</span></div>
         ${mqTickVals(+ce.socle.fr, mqFmt(ce.socle.fr) + ' %', +ce.socle.pr, mqFmt(ce.socle.pr) + ' %')}
         <div class="track" style="margin-top:2px"><i data-w="${(+ce.socle.v).toFixed(1)}" style="background:${socleColor}"></i><span class="tick fr" data-pos="${(+ce.socle.fr).toFixed(0)}"></span><span class="tick pr" data-pos="${(+ce.socle.pr).toFixed(0)}"></span></div>
         ${barLegend}
-        <div class="acc-note">Présence des 31 équipements essentiels du quotidien (mairie, médecin, école, boulangerie…), pondérés selon leur importance. Mesure la diversité des services présents, pas leur nombre.</div>
+        <div class="acc-note">Part existante sur les 31 types d'équipements du quotidien (mairie, médecin, école, boulangerie…), pondérés selon leur importance. Mesure la diversité des services présents, pas leur nombre.</div>
       </div>
       <div class="acc-cell">${ecoleBloc}</div>
       <div class="acc-cell">
         <div class="acc-head"><span class="acc-pic">${mqGareEcolePic('gare')}</span><span class="acc-title">À moins de 3 km d'une gare</span><span class="src">BPE 2024 · Filosofi 2021</span></div>
-        <div class="dual">${ecole('Habitants', ce.gareHab)}${ecole('Équipements', ce.gareEq)}${barLegend}<div class="acc-note">Part des habitants (et des équipements du quotidien) situés à moins de 3 km d'une gare de voyageurs. Marqueur de desserte ferroviaire du territoire.</div></div>
+        <div class="dual">${ecole('Habitants', ce.gareHab)}${ecole('Équipements', ce.gareEq)}${barLegend}<div class="acc-note">Part des habitants (et des équipements du quotidien) situés à moins de 3 km d'une gare de voyageurs. Marqueur d'accessibilité des équipements et services pour d'autres communes et de facilité d'accès pour les résidents à d'autres pôles d'activités et de services.</div></div>
       </div>
     </div>
   </div>`;
@@ -1679,7 +1679,7 @@ function mqModeImg(k) {
 // Sections : les cinq dimensions
 const mqSECMETA = [
   { key: 'struct', num: '01', title: 'Structure démographique', render: mqRenderDemo },
-  { key: 'access', num: '02', title: 'Accessibilité aux équipements', render: mqRenderEquip },
+  { key: 'access', num: '02', title: 'Niveau d\'équipements', render: mqRenderEquip },
   { key: 'mob', num: '03', title: 'Mobilité', render: mqRenderMobil },
   { key: 'env', num: '04', title: 'Artificialisation & GES', render: mqRenderEnv },
   { key: 'socio', num: '05', title: 'Socio-économique', render: mqRenderSocio },
@@ -1714,7 +1714,7 @@ function mqRenderSections() {
 function mqRenderDemo() {
   const a = mqD.age;
   const sen = k => (a[4]?.[k] || 0) + (a[5]?.[k] || 0) + (a[6]?.[k] || 0); // 60 ans et +
-  const jeu = k => (a[0]?.[k] || 0);                                       // moins de 15 ans
+  const jeu = k => (a[0]?.[k] || 0) + (a[1]?.[k] || 0);                                       // moins de 30 ans
   const ij   = jeu('v')   > 0 ? Math.round(jeu('v')   / sen('v')   * 100) : null;
   const ijFr = jeu('nat') > 0 ? Math.round(jeu('nat') / sen('nat') * 100) : null;
   const ijPr = jeu('typ') > 0 ? Math.round(jeu('typ') / sen('typ') * 100) : null;
@@ -1742,8 +1742,8 @@ function mqRenderDemo() {
     </div>
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Indice de jeunesse</span><span class="src">INSEE Recensement 2021</span></div>
-      <div class="panel-note">Nombre de jeunes de moins de 15 ans pour 100 personnes de 60 ans et plus. Plus l'indice est élevé, plus la population est jeune.</div>
-      <div class="gauge-val"><span class="v tabular">${ij != null ? ij : '—'}</span><span class="u">jeunes (&lt;15 ans) pour 100 seniors (60+)</span></div>
+      <div class="panel-note">Nombre de jeunes de moins de 30 ans pour 100 personnes de 60 ans et plus. Plus l'indice est élevé, plus la population est jeune.</div>
+      <div class="gauge-val"><span class="v tabular">${ij != null ? ij : '—'}</span><span class="u">jeunes (&lt;30 ans) pour 100 seniors (60+)</span></div>
       ${gloss ? `<div class="vieil-gloss">${gloss}</div>` : ''}
       <div style="margin-top:22px">${mqTickVals(pct(ijFr), ijFr != null ? ijFr : '—', pct(ijPr), ijPr != null ? ijPr : '—')}</div>
       <div class="track"><i data-w="${pct(ij).toFixed(1)}"></i><span class="tick fr" data-pos="${pct(ijFr).toFixed(1)}"></span><span class="tick pr" data-pos="${pct(ijPr).toFixed(1)}"></span></div>
@@ -1785,7 +1785,7 @@ function mqRenderEquip() {
       <div class="divider-h"></div>
       <div class="kpi-mini">
         <div class="v tabular">${mqComma((+eq.socle.v).toFixed(1))}<span class="u"> %</span></div><div class="l">Couverture du socle</div>
-        <div style="font-size:11px;color:var(--ink-3);margin:1px 0 5px;line-height:1.3">Les essentiels sont-ils là ? Présence des 31 équipements de base, peu importe leur nombre.</div>
+        <div style="font-size:11px;color:var(--ink-3);margin:1px 0 5px;line-height:1.3">Les essentiels sont-ils là ? Part existante sur les 31 types d'équipements, peu importe leur nombre.</div>
         <div class="bar"><i data-w="${(+eq.socle.v).toFixed(1)}" style="background:var(--vegetal)"></i></div>
         <div class="ref">France ${mqFmt(eq.socle.fr)} % · pairs ${mqFmt(eq.socle.pr)} %</div>
       </div>
@@ -1840,7 +1840,7 @@ function mqRenderMobil() {
         <div class="sref">France ${mqComma((+m.travailCommune.fr).toFixed(1))} % · pairs ${mqComma((+m.travailCommune.pr).toFixed(1))} %</div>
       </div>
       <div class="stat-block">
-        <div class="sl">Parmi eux, usage de la voiture <span class="malus">futur malus</span></div>
+        <div class="sl">Parmi eux, usage de la voiture</div>
         <div class="sv tabular">${mqComma((+m.voitureSurPlace.v).toFixed(1))} %</div>
         <div class="sref">France ${mqComma((+m.voitureSurPlace.fr).toFixed(1))} % · pairs ${mqComma((+m.voitureSurPlace.pr).toFixed(1))} %</div>
       </div>
@@ -1896,7 +1896,7 @@ function mqRenderEnv() {
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Artificialisation des sols</span><span class="src">Corine Land Cover 2018 · ENAF 2009-2023</span></div>
       ${stockPct != null ? `
-      <div class="cell-label">Part du territoire déjà artificialisée · Corine Land Cover</div>
+      <div class="cell-label">Part du territoire artificialisée · CLC 2018</div>
       <div style="display:flex;align-items:baseline;gap:9px;margin-top:3px">
         <span class="tabular" style="font-size:40px;font-weight:800;letter-spacing:-.03em;color:var(--terre)">${mqComma(stockPct.toFixed(1))}<span style="font-size:21px"> %</span></span>
         <span style="font-size:13px;color:var(--ink-3);font-weight:600">soit ${mqFmt(Math.round(ar.stockHa))} ha sur ${mqComma((+ar.surfKm2).toFixed(0))} km²</span>
@@ -1904,7 +1904,7 @@ function mqRenderEnv() {
       <div class="track" style="margin-top:11px;height:9px"><i data-w="${stockPct.toFixed(1)}" style="background:var(--terre)"></i></div>
       <div class="gauge-scale"><span>0 %</span><span>100 % du territoire</span></div>
       <div class="divider-h"></div>` : ''}
-      <div class="cell-label">Consommé sur 2015–2021 · artificialisation nouvelle</div>
+      <div class="cell-label">Artificialisation nouvelle 2015 - 2021</div>
       <div class="waffle-head"><span class="v tabular">${mqFmt(ar.m2)}</span><span class="u">m² · ${mqFmt(ar.ha)} ha</span></div>
       <div class="waffle-eq">≈ ${mqComma(ar.terrains)} terrains de football consommés</div>
       <div class="pitch-grid" id="pitchGrid" data-terrains="${ar.terrains}"></div>
@@ -1912,13 +1912,14 @@ function mqRenderEnv() {
       <div class="waffle-perhab">
         <div class="cell-label">Par habitant</div>
         <div style="display:flex;align-items:baseline;gap:8px"><span class="tabular" style="font-size:30px;font-weight:800;letter-spacing:-.03em">${mqComma((+ar.parHab).toFixed(1))}</span><span style="font-size:13px;color:var(--ink-3);font-weight:600">m² · 2015–2021</span></div>
+        ${(() => { const v=+ar.parHab||0, fr=ar.frHab!=null?+ar.frHab:null, pr=ar.prHab!=null?+ar.prHab:null; if(fr==null&&pr==null) return ""; const scl=Math.ceil(Math.max(v,fr||0,pr||0,1)*1.12/5)*5; const p=x=>(x!=null&&scl>0)?Math.min(100,+(x/scl*100).toFixed(1)):0; return `<div class="track" style="margin-top:10px"><i data-w="${p(v).toFixed(1)}" style="background:var(--terre)"></i><span class="tick fr" data-pos="${p(fr).toFixed(1)}"></span><span class="tick pr" data-pos="${p(pr).toFixed(1)}"></span></div>`; })()}
         ${refLine}
       </div>
       ${rN != null ? `
       <div class="divider-h"></div>
       <div class="cell-label">Positionnement national · artif par habitant</div>
       <div class="pctl-bar"><span class="pctl-marker" style="left:${Math.max(3, Math.min(97, rN)).toFixed(0)}%"></span></div>
-      <div class="pctl-scale"><span>moins artificialisé</span><span>plus artificialisé</span></div>
+      <div class="pctl-scale"><span>moins d'artificialisation</span><span>plus d'artificialisation</span></div>
       <div style="margin-top:9px">${mqRankChip(ar.rang)}</div>` : ''}
       ${hasVent ? `
       <div class="divider-h"></div>
@@ -1932,7 +1933,8 @@ function mqRenderEnv() {
         <span><i style="background:var(--terre)"></i>Habitat <b style="font-weight:800;margin-left:5px">${pH}%</b></span>
         <span><i style="background:var(--ardoise)"></i>Infrastructures <b style="font-weight:800;margin-left:5px">${pI}%</b></span>
         <span><i style="background:var(--ink-4)"></i>Autres <b style="font-weight:800;margin-left:5px">${pA}%</b></span>
-      </div>` : ''}
+      </div>
+      <div style="font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.4">« Autres » regroupe l'artificialisation à usage d'activité et de tertiaire.</div>` : ''}
     </div>
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Émissions GES par habitant</span><span class="src">ADEME · inventaire territorial</span></div>

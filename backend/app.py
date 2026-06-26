@@ -340,6 +340,32 @@ async def carto(code: str, layers: Optional[str] = None):
         else:
             return {_key: {"type": "FeatureCollection", "features": []}, "error": "ecoles_epci.json absent"}
 
+    # ─── Couche gares (BPE24 : E107/E108/E109) ───
+    if "gares" in (layers or ""):
+        import json as _json
+        from pathlib import Path as _Path
+        _g_file = _Path(__file__).parent / "data" / "gares_epci.json"
+        if _g_file.exists():
+            try:
+                _data = _json.loads(_g_file.read_text())
+                _epcis_dict = _data.get("epcis", _data)
+                _c2e = _data.get("commune_to_epci", {})
+                _lookup_code = _c2e.get(code, code)
+                _gares = _epcis_dict.get(_lookup_code, [])
+                _features = [
+                    {
+                        "type": "Feature",
+                        "geometry": {"type": "Point", "coordinates": [g["lon"], g["lat"]]},
+                        "properties": {"libcom": g.get("libcom", ""), "nom": g.get("nom", "")},
+                    }
+                    for g in _gares
+                ]
+                return {"gares": {"type": "FeatureCollection", "features": _features}}
+            except Exception as _e:
+                return {"gares": {"type": "FeatureCollection", "features": []}, "error": str(_e)}
+        else:
+            return {"gares": {"type": "FeatureCollection", "features": []}, "error": "gares_epci.json absent"}
+
     # ─── Couches équipements BPE24 (Santé / Commerces) ───
     for _cat in ("sante", "commerces"):
         if _cat in (layers or ""):

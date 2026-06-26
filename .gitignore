@@ -44,3 +44,5 @@ Thumbs.db
 #
 # backend/data/*.csv
 # backend/data/precomputed.pkl.gzdata_brut/
+data_brut/
+*.bak*

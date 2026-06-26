@@ -12,7 +12,7 @@ window.cartoState = {
   contourLayer: null,
   communesData: null, communesLayer: null, communesLabels: null,
   choroLayer: null, poiLayers: {}, poiFeatures: {}, bufferLayer: null,
-  lens: 'demo',
+  couche: null, angle: 'demo',
   sub: {
     enseignement: new Set(),
     equipements: new Set(),
@@ -188,21 +188,27 @@ function buildLensRail() {
   GROUPS.forEach(grp => {
     const lenses = CARTO_LENSES.filter(L0 => (L0.g || 'lecture') === grp.g);
     if (!lenses.length) return;
+    const box = document.createElement('div');
+    box.className = 'lens-box';
+    box.style.cssText = 'background:var(--surface,#fff);border:1px solid var(--line,#e7e7e1);border-radius:14px;padding:6px 6px 8px;margin-bottom:14px;box-shadow:0 1px 2px rgba(20,20,20,.04);';
     const h = document.createElement('div');
     h.className = 'lens-group-title';
     h.textContent = grp.title;
-    h.style.cssText = 'font:600 11px/1.4 system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3,#8a8f88);padding:14px 12px 5px;';
-    host.appendChild(h);
+    h.style.cssText = 'font:600 11px/1.4 system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3,#8a8f88);padding:9px 8px 6px;';
+    box.appendChild(h);
     lenses.forEach(L0 => {
+      const active = grp.g === 'theme' ? window.cartoState.couche : window.cartoState.angle;
       const b = document.createElement('button');
-      b.className = 'lens' + (L0.id === window.cartoState.lens ? ' on' : '');
+      b.className = 'lens' + (L0.id === active ? ' on' : '');
       b.dataset.id = L0.id;
+      b.dataset.g = grp.g;
       b.innerHTML = `<span class="lens-ic" style="background:${L0.c}">${CARTO_ICON[L0.id] || ''}</span>
         <span class="lens-tx"><span class="n">${L0.n}</span><span class="d">${L0.d}</span></span>
         <span class="lens-chk"></span>`;
-      b.onclick = () => selectLens(L0.id);
-      host.appendChild(b);
+      b.onclick = () => (grp.g === 'theme' ? selectCouche(L0.id) : selectAngle(L0.id));
+      box.appendChild(b);
     });
+    host.appendChild(box);
   });
 }
 function buildToggles() {
@@ -232,11 +238,23 @@ function wireCartoUI() {
   if (inp) inp.addEventListener('input', cartoSearch);
 }
 
-function selectLens(id) {
-  const cur = window.cartoState.lens;
-  window.cartoState.lens = (cur === id) ? null : id; // reclic = désélection
-  document.querySelectorAll('.lens').forEach(b => b.classList.toggle('on', b.dataset.id === window.cartoState.lens));
+function refreshLensHighlight() {
+  document.querySelectorAll('.lens').forEach(b => {
+    const active = b.dataset.g === 'theme' ? window.cartoState.couche : window.cartoState.angle;
+    b.classList.toggle('on', b.dataset.id === active);
+  });
+}
+function selectCouche(id) {
+  const cur = window.cartoState.couche;
+  window.cartoState.couche = (cur === id) ? null : id; // reclic = referme le panneau
+  refreshLensHighlight();
   renderCtrl();
+  applyLens();
+}
+function selectAngle(id) {
+  const cur = window.cartoState.angle;
+  window.cartoState.angle = (cur === id) ? null : id; // reclic = masque le choroplèthe
+  refreshLensHighlight();
   applyLens();
 }
 
@@ -244,7 +262,7 @@ function selectLens(id) {
 function renderCtrl() {
   const ctrl = document.getElementById('lensCtrl'), div = document.getElementById('ctrlDiv');
   if (!ctrl || !div) return;
-  const L0 = CARTO_LENSES.find(l => l.id === window.cartoState.lens);
+  const L0 = CARTO_LENSES.find(l => l.id === window.cartoState.couche);
   if (!L0 || L0.type !== 'poi') { ctrl.classList.remove('show'); div.hidden = true; ctrl.innerHTML = ''; return; }
   div.hidden = false;
   ctrl.classList.add('show');
@@ -253,9 +271,9 @@ function renderCtrl() {
     equipements: [['sante', 'Santé'], ['commerces', 'Commerces']],
     mobilite: [['tc', 'Arrêts TC'], ['velo', 'Pistes cyclables'], ['gares', 'Gares']],
   };
-  const opts = LENS_POI[window.cartoState.lens] || [];
-  const sub = window.cartoState.sub[window.cartoState.lens];
-  const buf = window.cartoState.buffer[window.cartoState.lens] || 0;
+  const opts = LENS_POI[window.cartoState.couche] || [];
+  const sub = window.cartoState.sub[window.cartoState.couche];
+  const buf = window.cartoState.buffer[window.cartoState.couche] || 0;
   const km = (buf / 1000).toFixed(1).replace('.', ',');
   ctrl.innerHTML = `<div class="sub-title">Couches</div>
     <div class="chips">${opts.map(([k, lab]) => `<button class="chip${sub.has(k) ? ' on' : ''}" data-cat="${k}"><span class="sw" style="background:${POICOLOR[k] || 'var(--vegetal)'}"></span>${lab}</button>`).join('')}</div>
@@ -271,7 +289,7 @@ function renderCtrl() {
   });
   const range = ctrl.querySelector('#bufRange');
   if (range) range.oninput = e => {
-    window.cartoState.buffer[window.cartoState.lens] = +e.target.value;
+    window.cartoState.buffer[window.cartoState.couche] = +e.target.value;
     drawBuffer(); renderCtrl(); updateInsight();
   };
 }
@@ -342,7 +360,7 @@ function drawCommunesBase() {
   const M = window.cartoState.map, data = window.cartoState.communesData;
   _clearCommunesBase();
   if (!M || !data) return;
-  const lens = CARTO_LENSES.find(l => l.id === window.cartoState.lens);
+  const lens = CARTO_LENSES.find(l => l.id === window.cartoState.angle);
   const isChoro = lens && lens.type === 'choro';
   // tracé gris seulement hors choroplèthe (la choroplèthe dessine déjà les limites)
   if (window.cartoState.toggles.communes && !isChoro) {
@@ -375,16 +393,16 @@ function updateCommuneLabelsVisibility() {
 async function applyLens() {
   const M = window.cartoState.map;
   if (!M || !window.cartoState.code) return;
-  const L0 = CARTO_LENSES.find(l => l.id === window.cartoState.lens);
+  const angleL = CARTO_LENSES.find(l => l.id === window.cartoState.angle);
   _clearChoro(); _clearBuffer(); _clearCommunesBase();
 
   drawCommunesBase();
-  if (L0 && L0.type === 'choro') {
-    await drawChoro(L0.metric);
+  if (angleL && angleL.type === 'choro') {
+    await drawChoro(angleL.metric);
   }
   // Les couches cochées restent affichées quelle que soit la lentille active.
   await drawPoi(allActivePoi());
-  if (L0 && L0.type === 'poi') {
+  if (window.cartoState.couche) {
     drawBuffer();
   }
   // L0 absent => aucune couche, on ne garde que le tracé des communes
@@ -464,7 +482,7 @@ async function drawPoi(cats) {
         const nm = f.properties && f.properties.nom ? f.properties.nom : '';
         if (cat === 'gares') {
           // gare : picto carré
-          L.marker([lat, lon], { icon: L.divIcon({ className: 'gare-marker', html: '<span class="gare-sq"></span>', iconSize: [13, 13], iconAnchor: [7, 7] }) })
+          L.marker([lat, lon], { icon: L.divIcon({ className: 'gare-marker', html: '<span style="display:block;width:11px;height:11px;background:#16798c;border:2px solid #fff;box-shadow:0 0 0 1px #16798c"></span>', iconSize: [13, 13], iconAnchor: [7, 7] }) })
             .bindTooltip(`<span class="tt-k">Gare</span><span class="tt-v" style="font-size:13px">${nm}</span><br><span style="opacity:.75">${lib}</span>`, { direction: 'top', offset: [0, -7], className: 'cc-tip' })
             .addTo(group);
         } else if (cat === 'tc') {
@@ -493,7 +511,7 @@ function drawBuffer() {
   const M = window.cartoState.map;
   _clearBuffer();
   if (!M) return;
-  const lens = window.cartoState.lens;
+  const lens = window.cartoState.couche;
   const radius = window.cartoState.buffer[lens] || 0;
   if (!radius) return;
   const cats = [...(window.cartoState.sub[lens] || [])].filter(c => c !== 'velo');
@@ -517,7 +535,9 @@ function drawBuffer() {
 function updateInsight() {
   const el = document.getElementById('cartoInsight');
   if (!el) return;
-  const L0 = CARTO_LENSES.find(l => l.id === window.cartoState.lens);
+  const _angleL = CARTO_LENSES.find(l => l.id === window.cartoState.angle);
+  const _coucheL = CARTO_LENSES.find(l => l.id === window.cartoState.couche);
+  const L0 = (_angleL && _angleL.type === 'choro') ? _angleL : ((_coucheL && _coucheL.type === 'poi') ? _coucheL : null);
   if (!L0) {
     const nb = (window.cartoState.communesData?.features || []).length;
     el.innerHTML = cardCount('Tracé des communes', 'var(--ink-3)', nb || '—', 'communes', 'Aucun indicateur affiché. Clique un angle de lecture pour en afficher un ; reclique dessus pour le masquer.');
