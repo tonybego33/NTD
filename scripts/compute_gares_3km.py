@@ -1,7 +1,7 @@
 """
 compute_gares_3km.py — Proximité aux gares (jumeau du 1,5 km école).
 
-Calcule, à moins de 3 km d'une gare de voyageurs (BPE E107/E108/E109) :
+Calcule, à moins de 1,5 km d'une gare de voyageurs (BPE E107/E108/E109) :
   - le % d'habitants (via carreaux de population Filosofi 200 m)
   - le % d'équipements du quotidien (même panier que l'indicateur école)
 à l'échelle COMMUNE et à l'échelle EPCI.
@@ -28,7 +28,7 @@ CARREAUX = ROOT / "data_brut" / "carreaux_200m_met.csv"
 OUT_COM = ROOT / "backend" / "data" / "gares_dispersion_communes.csv"
 OUT_EPCI = ROOT / "backend" / "data" / "gares_dispersion_epci.csv"
 
-RAYON_M = 3000
+RAYON_M = 1500
 GARES = {"E107", "E108", "E109"}
 EQUIPEMENTS_QUOTIDIEN = {
     "A129", "A203", "A206", "A207", "A208", "A301", "A302",
@@ -74,7 +74,7 @@ def pct_in_rayon(points_pop, ancres, rayon_sq):
 
 
 def main():
-    print("\n=== Proximite gares (3 km) — commune + EPCI ===\n")
+    print("\n=== Proximite gares (1,5 km) — commune + EPCI ===\n")
     for p, label in [(BPE, "BPE24.csv"), (CARREAUX, "carreaux_200m_met.csv"), (PICKLE, "pickle")]:
         if not p.exists():
             sys.exit(f"[err] {label} introuvable : {p}")

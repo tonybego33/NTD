@@ -1659,8 +1659,8 @@ function mqRenderIdentity() {
       </div>
       <div class="acc-cell">${ecoleBloc}</div>
       <div class="acc-cell">
-        <div class="acc-head"><span class="acc-pic">${mqGareEcolePic('gare')}</span><span class="acc-title">À moins de 3 km d'une gare</span><span class="src">BPE 2024 · Filosofi 2021</span></div>
-        <div class="dual">${ecole('Habitants', ce.gareHab)}${ecole('Équipements', ce.gareEq)}${barLegend}<div class="acc-note">Part des habitants (et des équipements du quotidien) situés à moins de 3 km d'une gare de voyageurs. Marqueur d'accessibilité des équipements et services pour d'autres communes et de facilité d'accès pour les résidents à d'autres pôles d'activités et de services.</div></div>
+        <div class="acc-head"><span class="acc-pic">${mqGareEcolePic('gare')}</span><span class="acc-title">À moins de 1,5 km d'une gare</span><span class="src">BPE 2024 · Filosofi 2021</span></div>
+        <div class="dual">${ecole('Habitants', ce.gareHab)}${ecole('Équipements', ce.gareEq)}${barLegend}<div class="acc-note">Part des habitants (et des équipements du quotidien) situés à moins de 1,5 km d'une gare de voyageurs. Marqueur d'accessibilité des équipements et services pour d'autres communes et de facilité d'accès pour les résidents à d'autres pôles d'activités et de services.</div></div>
       </div>
     </div>
   </div>`;

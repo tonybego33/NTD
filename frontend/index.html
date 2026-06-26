@@ -333,28 +333,31 @@
 
 <div id="view-cartographie">
 
-  <header class="carto-hdr">
-    <a href="#" class="carto-hdr-brand" onclick="closeCartographie(event)">
-      <img src="/assets/arep-logo.png" alt="AREP" onerror="this.style.display='none'">
-      <span class="carto-hdr-div"></span>
-      <span class="carto-hdr-lockup">
-        <span class="carto-hdr-name">Empreintes</span>
-        <span class="carto-hdr-sub">Nos territoires décarbonés</span>
-      </span>
-    </a>
-    <nav class="carto-hdr-nav">
-      <a href="#" data-nav="diagnostic" onclick="closeCartographie(event)">Diagnostic</a>
-      <a href="#" data-nav="cartographie" class="active" onclick="event.preventDefault()">Cartographie</a>
-      <a href="#" data-nav="methodologie" onclick="cartoGoMethodo(event)">Méthodologie</a>
-      <a href="#" data-nav="indicateurs" onclick="event.preventDefault()">Indicateurs</a>
-      <a href="#" data-nav="ressources" onclick="event.preventDefault()">Ressources</a>
-    </nav>
-    <div class="carto-hdr-aux">
-      <span class="carto-hdr-context" id="cartoTerritoireLabel"></span>
-      <div class="carto-hdr-search">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="cartoSearchInput" placeholder="Ville, EPCI, code…" autocomplete="off">
-        <div class="search-dropdown" id="cartoSearchDropdown" hidden></div>
+  <header class="site-header methodo-siteheader">
+    <div class="wrap site-header-inner">
+      <a href="#" class="brand" onclick="closeCartographie(event)">
+        <img src="/assets/arep-logo.png" alt="AREP" class="brand-arep" onerror="this.closest('.brand').classList.add('no-logo')">
+        <span class="brand-arep-txt">AREP</span>
+        <span class="brand-div"></span>
+        <span class="brand-lockup">
+          <span class="brand-name">Empreintes</span>
+          <span class="brand-sub">Nos territoires décarbonés</span>
+        </span>
+      </a>
+      <nav class="main-nav">
+        <a href="#" class="nav-link" onclick="closeCartographie(event)">Diagnostic</a>
+        <a href="#" class="nav-link is-active" onclick="event.preventDefault()">Cartographie</a>
+        <a href="#" class="nav-link" onclick="closeCartographie(event); openMethodologie(event)">Méthodologie</a>
+        <a href="#" class="nav-link" onclick="closeCartographie(event); openBiblio(event)">Fondements</a>
+        <a href="#" class="nav-link">Ressources</a>
+      </nav>
+      <div class="header-aux">
+        <span class="carto-hdr-context" id="cartoTerritoireLabel"></span>
+        <div class="carto-hdr-search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="cartoSearchInput" placeholder="Ville, EPCI, code…" autocomplete="off">
+          <div class="search-dropdown" id="cartoSearchDropdown" hidden></div>
+        </div>
       </div>
     </div>
   </header>

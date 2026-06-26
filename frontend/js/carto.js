@@ -31,7 +31,7 @@ function openCartographie(e) {
   if (!overlay) return;
   overlay.classList.add('is-open');
   document.body.style.overflow = 'hidden';
-  document.querySelectorAll('.site-header .nav-link').forEach((l, i) => l.classList.toggle('is-active', i === 1));
+  document.querySelectorAll('#view-cartographie .nav-link').forEach(l => l.classList.toggle('is-active', l.textContent.trim() === 'Cartographie'));
   setCartoNavActive('cartographie');
 
   if (!window.cartoState.map) initCartoMap();
@@ -150,9 +150,9 @@ const CARTO_METRIC_META = {
   jeunes: { label: 'Moins de 15 ans', unit: '%', lo: 'Peu', hi: 'Beaucoup' },
   revenu: { label: 'Revenu médian', unit: '€', lo: 'Modeste', hi: 'Aisé' },
 };
-const POICOLOR = { ecoles: 'var(--soleil)', creche: '#e64980', maternelle: '#f08c00', elementaire: '#1971c2', college: '#7048e8', lycee: '#343a40', universite: '#0ca678', sante: 'var(--red)', commerces: 'var(--terre)', tc: 'var(--vegetal)', gares: 'var(--eau)', velo: '#1f9d55' };
-const POIHEX = { ecoles: '#d79a1c', creche: '#e64980', maternelle: '#f08c00', elementaire: '#1971c2', college: '#7048e8', lycee: '#343a40', universite: '#0ca678', sante: '#e2001a', commerces: '#b5642f', tc: '#3c8a5e', gares: '#16798c', velo: '#1f9d55' };
-const POINAME = { ecoles: 'Écoles', creche: 'Crèches', maternelle: 'Maternelles', elementaire: 'Élémentaires', college: 'Collèges', lycee: 'Lycées', universite: 'Universités', sante: 'Santé', commerces: 'Commerces', tc: 'Arrêts TC', velo: 'Pistes cyclables', gares: 'Gares' };
+const POICOLOR = { ecoles: 'var(--soleil)', creche: '#e64980', maternelle: '#f08c00', elementaire: '#1971c2', college: '#7048e8', lycee: '#343a40', universite: '#0ca678', sante: 'var(--red)', commerces: 'var(--terre)', tc: 'var(--vegetal)', gares: 'var(--eau)', velo: '#1f9d55', rail: '#e2001a' };
+const POIHEX = { ecoles: '#d79a1c', creche: '#e64980', maternelle: '#f08c00', elementaire: '#1971c2', college: '#7048e8', lycee: '#343a40', universite: '#0ca678', sante: '#e2001a', commerces: '#b5642f', tc: '#3c8a5e', gares: '#16798c', velo: '#1f9d55', rail: '#e2001a' };
+const POINAME = { ecoles: 'Écoles', creche: 'Crèches', maternelle: 'Maternelles', elementaire: 'Élémentaires', college: 'Collèges', lycee: 'Lycées', universite: 'Universités', sante: 'Santé', commerces: 'Commerces', tc: 'Arrêts TC', velo: 'Pistes cyclables', gares: 'Gares', rail: 'Voies ferrées' };
 // Couleur + libellé par type d'arrêt TC (le backend renvoie properties.type)
 const TC_TYPE = {
   bus: { hex: '#2563eb', lab: 'Arrêt de bus' },
@@ -269,7 +269,7 @@ function renderCtrl() {
   const LENS_POI = {
     enseignement: [['creche', 'Crèches'], ['maternelle', 'Maternelles'], ['elementaire', 'Élémentaires'], ['college', 'Collèges'], ['lycee', 'Lycées'], ['universite', 'Universités']],
     equipements: [['sante', 'Santé'], ['commerces', 'Commerces']],
-    mobilite: [['tc', 'Arrêts TC'], ['velo', 'Pistes cyclables'], ['gares', 'Gares']],
+    mobilite: [['tc', 'Arrêts TC'], ['velo', 'Pistes cyclables'], ['gares', 'Gares'], ['rail', 'Voies ferrées']],
   };
   const opts = LENS_POI[window.cartoState.couche] || [];
   const sub = window.cartoState.sub[window.cartoState.couche];
@@ -499,7 +499,7 @@ async function drawPoi(cats) {
         }
       } else if (g.type === 'LineString' || g.type === 'MultiLineString') {
         const hex = cat === 'velo' ? '#1f9d55' : (POIHEX[cat] || '#777');
-        L.geoJSON(f, { style: { color: hex, weight: 3, opacity: 0.85 } }).addTo(group);
+        L.geoJSON(f, { style: { color: hex, weight: cat === 'rail' ? 3.6 : 3, opacity: cat === 'rail' ? 0.92 : 0.85 } }).addTo(group);
       }
     });
     group.addTo(M);
@@ -514,7 +514,7 @@ function drawBuffer() {
   const lens = window.cartoState.couche;
   const radius = window.cartoState.buffer[lens] || 0;
   if (!radius) return;
-  const cats = [...(window.cartoState.sub[lens] || [])].filter(c => c !== 'velo');
+  const cats = [...(window.cartoState.sub[lens] || [])].filter(c => c !== 'velo' && c !== 'rail');
   const group = L.layerGroup();
   cats.forEach(cat => {
     const hex = POIHEX[cat] || '#777';
@@ -565,7 +565,7 @@ function updateInsight() {
 
   } else {
     const sub = [...(window.cartoState.sub[L0.id] || [])];
-    const ptCats = sub.filter(c => c !== 'velo');
+    const ptCats = sub.filter(c => c !== 'velo' && c !== 'rail');
     const n = ptCats.reduce((s, c) => s + (window.cartoState.poiFeatures[c]?.length || 0), 0);
     const buf = window.cartoState.buffer[L0.id] || 0;
     const km = (buf / 1000).toFixed(1).replace('.', ',');

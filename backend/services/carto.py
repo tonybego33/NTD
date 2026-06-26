@@ -142,6 +142,40 @@ out geom;
     return {"type": "FeatureCollection", "features": features}
 
 
+def get_rail(bbox: tuple) -> dict:
+    """Voies ferrees (railway=rail) dans une bbox. Hors voies de service."""
+    s, w, n, e = bbox
+    key = f"rail_{s:.3f}_{w:.3f}_{n:.3f}_{e:.3f}"
+    query = f"""
+[out:json][timeout:60];
+(
+  way["railway"="rail"][!"service"]({s},{w},{n},{e});
+);
+out geom;
+"""
+    data = _overpass_query(query, key)
+    if not data or "_error" in data:
+        return {"type": "FeatureCollection", "features": [], "_error": data.get("_error") if data else "?"}
+    features = []
+    for el in data.get("elements", []):
+        if el.get("type") != "way" or "geometry" not in el:
+            continue
+        coords = [[pt["lon"], pt["lat"]] for pt in el["geometry"]]
+        if len(coords) < 2:
+            continue
+        tags = el.get("tags", {})
+        features.append({
+            "type": "Feature",
+            "geometry": {"type": "LineString", "coordinates": coords},
+            "properties": {
+                "name": tags.get("name", ""),
+                "categorie": "rail",
+                "railway": tags.get("railway", ""),
+            },
+        })
+    return {"type": "FeatureCollection", "features": features}
+
+
 def get_layers_for_territoire(territoire: dict, layers: list = None) -> dict:
     """
     Agrège les couches demandées pour un territoire.
@@ -156,6 +190,8 @@ def get_layers_for_territoire(territoire: dict, layers: list = None) -> dict:
         result["tc"] = get_tc_arrets(bbox)
     if "velo" in layers and bbox:
         result["velo"] = get_cyclable(bbox)
+    if "rail" in layers and bbox:
+        result["rail"] = get_rail(bbox)
     return result
 
 

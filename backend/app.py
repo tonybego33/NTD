@@ -400,7 +400,7 @@ async def carto(code: str, layers: Optional[str] = None):
 
     requested = None
     if layers:
-        requested = [x.strip() for x in layers.split(",") if x.strip() in ("tc", "velo", "gares")]
+        requested = [x.strip() for x in layers.split(",") if x.strip() in ("tc", "velo", "gares", "rail")]
     return carto_service.get_layers_for_territoire(t, requested)
 
 
