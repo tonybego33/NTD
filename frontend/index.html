@@ -104,7 +104,7 @@
       </span>
       <span class="emc2b-text">
         <span class="emc2b-letter">E</span>
-        <span class="emc2b-label">énergie</span>
+        <span class="emc2b-label">nergie</span>
       </span>
     </div>
     <div class="emc2b-item" data-pillar="M">
@@ -162,7 +162,7 @@
       </span>
       <span class="emc2b-text">
         <span class="emc2b-letter">M</span>
-        <span class="emc2b-label">matière</span>
+        <span class="emc2b-label">atière</span>
       </span>
     </div>
     <div class="emc2b-item" data-pillar="C1">
@@ -209,7 +209,7 @@
       </span>
       <span class="emc2b-text">
         <span class="emc2b-letter">C</span>
-        <span class="emc2b-label">carbone</span>
+        <span class="emc2b-label">arbone</span>
       </span>
     </div>
     <div class="emc2b-item" data-pillar="C2">
@@ -239,7 +239,7 @@
       </span>
       <span class="emc2b-text">
         <span class="emc2b-letter">C</span>
-        <span class="emc2b-label">climat</span>
+        <span class="emc2b-label">limat</span>
       </span>
     </div>
     <div class="emc2b-item" data-pillar="B">
@@ -262,7 +262,7 @@
       </span>
       <span class="emc2b-text">
         <span class="emc2b-letter">B</span>
-        <span class="emc2b-label">biodiversité</span>
+        <span class="emc2b-label">iodiversité</span>
       </span>
     </div>
   </div>
@@ -309,7 +309,6 @@
       <a href="#" class="nav-link" onclick="openCartographie(event)">Cartographie</a>
       <a href="#" class="nav-link" onclick="openMethodologie(event)">Méthodologie</a>
       <a href="#" class="nav-link" onclick="openBiblio(event)">Fondements</a>
-      <a href="#" class="nav-link">Ressources</a>
     </nav>
 
     <div class="header-aux">
@@ -349,7 +348,6 @@
         <a href="#" class="nav-link is-active" onclick="event.preventDefault()">Cartographie</a>
         <a href="#" class="nav-link" onclick="closeCartographie(event); openMethodologie(event)">Méthodologie</a>
         <a href="#" class="nav-link" onclick="closeCartographie(event); openBiblio(event)">Fondements</a>
-        <a href="#" class="nav-link">Ressources</a>
       </nav>
       <div class="header-aux">
         <span class="carto-hdr-context" id="cartoTerritoireLabel"></span>
@@ -475,7 +473,6 @@
         <a href="#" class="nav-link" onclick="closeBiblio(event); openCartographie(event)">Cartographie</a>
         <a href="#" class="nav-link" onclick="closeBiblio(event); openMethodologie(event)">Méthodologie</a>
         <a href="#" class="nav-link is-active">Fondements</a>
-        <a href="#" class="nav-link">Ressources</a>
       </nav>
       <div class="header-aux">
         <button class="header-replay" title="Rejouer l'intro" onclick="replayIntro()" aria-label="Rejouer l'intro">
@@ -604,7 +601,6 @@
         <a href="#" class="nav-link" onclick="closeMethodologie(event); openCartographie(event)">Cartographie</a>
         <a href="#" class="nav-link is-active">Méthodologie</a>
         <a href="#" class="nav-link" onclick="openBiblio(event)">Fondements</a>
-        <a href="#" class="nav-link">Ressources</a>
       </nav>
       <div class="header-aux">
         <button class="header-replay" title="Rejouer l'intro" onclick="replayIntro()" aria-label="Rejouer l'intro">
@@ -889,5 +885,83 @@
   <script src="/js/app.js"></script>
   <script src="/js/carto.js"></script>
   <script src="/js/intro.js"></script>
+<script id="nav-size-fix-js">
+(function () {
+  var SIZE = 25; 
+  var LABELS = ['Diagnostic', 'Cartographie', 'Méthodologie', 'Fondements', 'Indicateurs', 'Ressources'];
+  function fix() {
+    var els = document.querySelectorAll('a, button');
+    for (var i = 0; i < els.length; i++) {
+      var t = (els[i].textContent || '').trim();
+      if (LABELS.indexOf(t) !== -1) {
+        els[i].style.setProperty('font-size', SIZE + 'px', 'important');
+      }
+    }
+  }
+  if (document.readyState !== 'loading') fix();
+  else document.addEventListener('DOMContentLoaded', fix);
+  // re-applique au cas ou la nav est rendue/maj apres coup
+  setTimeout(fix, 400);
+  setTimeout(fix, 1200);
+})();
+</script>
+<script id="emc2b-size-fix-js">
+(function () {
+  var LETTER = 60;  // taille de la lettre (E, M, C...)  (avant 22)
+  var LABEL  = 35;  // taille du mot (energie...)        (avant 11.5)
+  var PAD_X  = 100;  // allongement horizontal de la bulle (avant 22)
+  var ICON   = 106;  // diametre du rond icone            (avant 48)
+  function fix() {
+    document.querySelectorAll('.emc2b-letter').forEach(function (e) {
+      e.style.setProperty('font-size', LETTER + 'px', 'important');
+    });
+    document.querySelectorAll('.emc2b-label').forEach(function (e) {
+      e.style.setProperty('font-size', LABEL + 'px', 'important');
+    });
+    document.querySelectorAll('.emc2b-item').forEach(function (e) {
+      e.style.setProperty('padding', '14px ' + PAD_X + 'px 14px 14px', 'important');
+      e.style.setProperty('gap', '18px', 'important');
+    });
+    document.querySelectorAll('.emc2b-icon').forEach(function (e) {
+      e.style.setProperty('width', ICON + 'px', 'important');
+      e.style.setProperty('height', ICON + 'px', 'important');
+    });
+    document.querySelectorAll('.emc2b-icon svg').forEach(function (e) {
+      e.style.setProperty('width', Math.round(ICON * 0.58) + 'px', 'important');
+      e.style.setProperty('height', Math.round(ICON * 0.58) + 'px', 'important');
+    });
+  }
+  if (document.readyState !== 'loading') fix();
+  else document.addEventListener('DOMContentLoaded', fix);
+  setTimeout(fix, 500);
+  setTimeout(fix, 1500);
+})();
+</script>
+<script id="brand-size-fix-js">
+(function () {
+  var EM   = 22;  // "Empreintes"                     (avant 16)
+  var SUB  = 12;  // "Nos territoires decarbones"      (avant 9.5)
+  var LOGO = 32;  // hauteur du logo AREP (px)         (avant 22)
+  function fix() {
+    document.querySelectorAll('.brand-em').forEach(function (e) {
+      e.style.setProperty('font-size', EM + 'px', 'important');
+    });
+    document.querySelectorAll('.brand-sub').forEach(function (e) {
+      e.style.setProperty('font-size', SUB + 'px', 'important');
+    });
+    document.querySelectorAll('.hdr-brand img, .carto-hdr-brand img').forEach(function (e) {
+      e.style.setProperty('height', LOGO + 'px', 'important');
+      e.style.setProperty('width', 'auto', 'important');
+    });
+    document.querySelectorAll('.hdr-brand .div, .carto-hdr-brand .div').forEach(function (e) {
+      e.style.setProperty('height', (LOGO + 4) + 'px', 'important');
+    });
+  }
+  if (document.readyState !== 'loading') fix();
+  else document.addEventListener('DOMContentLoaded', fix);
+  setTimeout(fix, 500);
+  setTimeout(fix, 1500);
+})();
+</script>
 </body>
 </html>

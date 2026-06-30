@@ -1655,7 +1655,7 @@ function mqRenderIdentity() {
         ${mqTickVals(+ce.socle.fr, mqFmt(ce.socle.fr) + ' %', +ce.socle.pr, mqFmt(ce.socle.pr) + ' %')}
         <div class="track" style="margin-top:2px"><i data-w="${(+ce.socle.v).toFixed(1)}" style="background:${socleColor}"></i><span class="tick fr" data-pos="${(+ce.socle.fr).toFixed(0)}"></span><span class="tick pr" data-pos="${(+ce.socle.pr).toFixed(0)}"></span></div>
         ${barLegend}
-        <div class="acc-note">Part existante sur les 31 types d'équipements du quotidien (mairie, médecin, école, boulangerie…), pondérés selon leur importance. Mesure la diversité des services présents, pas leur nombre.</div>
+        <div class="acc-note">Part du poids des 31 équipements essentiels du quotidien (mairie, médecin, école, boulangerie…) présents sur le territoire. Chaque type compte selon son importance, et on regarde sa présence, pas le nombre d'équipements.</div>
       </div>
       <div class="acc-cell">${ecoleBloc}</div>
       <div class="acc-cell">
@@ -1785,16 +1785,16 @@ function mqRenderEquip() {
       <div class="divider-h"></div>
       <div class="kpi-mini">
         <div class="v tabular">${mqComma((+eq.socle.v).toFixed(1))}<span class="u"> %</span></div><div class="l">Couverture du socle</div>
-        <div style="font-size:11px;color:var(--ink-3);margin:1px 0 5px;line-height:1.3">Les essentiels sont-ils là ? Part existante sur les 31 types d'équipements, peu importe leur nombre.</div>
+        <div style="font-size:13px;color:var(--ink-3);margin:1px 0 5px;line-height:1.4">Les essentiels sont-ils là ? Part du poids des 31 types essentiels couverte, chaque type pondéré selon son importance.</div>
         <div class="bar"><i data-w="${(+eq.socle.v).toFixed(1)}" style="background:var(--vegetal)"></i></div>
         <div class="ref">France ${mqFmt(eq.socle.fr)} % · pairs ${mqFmt(eq.socle.pr)} %</div>
       </div>
       <div class="divider-h"></div>
       <div class="kpi-mini">
-        <div class="v tabular">${mqFmt(eq.variete.v)}</div><div class="l">Variété de l'offre</div>
-        <div style="font-size:11px;color:var(--ink-3);margin:1px 0 5px;line-height:1.3">L'offre est-elle diversifiée ? Nombre de types d'équipements différents présents.</div>
+        <div class="v tabular">${mqFmt(eq.variete.v)}<span class="u"> %</span></div><div class="l">Variété de l'offre</div>
+        <div style="font-size:13px;color:var(--ink-3);margin:1px 0 5px;line-height:1.4">L'offre est-elle diversifiée ? Part des types d'équipements présents, tous comptés à égalité, sans pondération.</div>
         <div class="bar"><i data-w="${Math.min(100, eq.variete.v / 72 * 100).toFixed(0)}"></i></div>
-        <div class="ref">France ${mqFmt(eq.variete.fr)} · pairs ${mqFmt(eq.variete.pr)}</div>
+        <div class="ref">France ${mqFmt(eq.variete.fr)} % · pairs ${mqFmt(eq.variete.pr)} %</div>
       </div>
     </div>
     <div class="panel">
@@ -1892,6 +1892,22 @@ function mqRenderEnv() {
     ? `<div class="dual-foot">${ar.frHab != null ? 'France ' + mqComma((+ar.frHab).toFixed(1)) : ''}${(ar.frHab != null && ar.prHab != null) ? ' · ' : ''}${ar.prHab != null ? 'pairs ' + mqComma((+ar.prHab).toFixed(1)) : ''} m²/hab</div>`
     : '';
   const stockPct = ar.surfKm2 > 0 ? Math.min(100, +(ar.stockHa / ar.surfKm2).toFixed(1)) : null;
+  // --- GES : rappel objectif 2050 + etiquette ImpactCO2 (ADEME) ---
+  const _ges = +e.gesTotPerHab || 0, _obj = 2;
+  const _ratio = _ges > 0 ? _ges / _obj : 0;
+  const gesObjLine = `<div class="ges-objectif" style="background:var(--paper,#f5f4f2);border:1px solid var(--line,#e4e3e0);border-radius:10px;padding:11px 13px;margin-bottom:16px">
+      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--terre)">Objectif 2050</span>
+        <span style="font-size:16px;font-weight:700">2 tCO₂e par habitant et par an</span>
+      </div>
+      <div style="font-size:14px;color:var(--ink-3);margin-top:4px;line-height:1.5">Cible compatible avec la neutralité carbone (SNBC).${_ges > 0 ? ` Ce territoire émet <b>${mqComma(_ges.toFixed(1))}</b> tCO₂e/hab, soit ${_ges > _obj ? `<b style="color:#e2001a;font-size:19px;vertical-align:-1px">${mqComma(_ratio.toFixed(1))} ×</b> <b style="color:#e2001a">l'objectif</b>` : `<b>déjà sous</b> l'objectif`}.` : ''}</div>
+    </div>`;
+  const _gesKg = Math.round(_ges * 1000);
+  const gesEtiquette = `<div style="margin-top:4px">
+      <div style="font-size:12px;color:var(--ink-3);margin-bottom:8px;line-height:1.45">À quoi correspondent ces <b>${mqComma(_ges.toFixed(1))} tCO₂e par habitant</b> ?</div>
+      <div id="gesEtiquette" data-kg="${_gesKg}"></div>
+      <div style="font-size:10.5px;color:var(--ink-4);margin-top:7px">Équivalences <b>ImpactCO2</b> · données ADEME</div>
+    </div>`;
   return `<div class="panels cols-2b">
     <div class="panel">
       <div class="panel-head"><span class="panel-title">Artificialisation des sols</span><span class="src">Corine Land Cover 2018 · ENAF 2009-2023</span></div>
@@ -1908,7 +1924,7 @@ function mqRenderEnv() {
       <div class="waffle-head"><span class="v tabular">${mqFmt(ar.m2)}</span><span class="u">m² · ${mqFmt(ar.ha)} ha</span></div>
       <div class="waffle-eq">≈ ${mqComma(ar.terrains)} terrains de football consommés</div>
       <div class="pitch-grid" id="pitchGrid" data-terrains="${ar.terrains}"></div>
-      <div class="waffle-foot">1 icône = 1 terrain de foot (7 140 m²) · la dernière marque la fraction</div>
+      <div class="waffle-foot">1 icône = 1 terrain de foot (7 140 m²)</div>
       <div class="waffle-perhab">
         <div class="cell-label">Par habitant</div>
         <div style="display:flex;align-items:baseline;gap:8px"><span class="tabular" style="font-size:30px;font-weight:800;letter-spacing:-.03em">${mqComma((+ar.parHab).toFixed(1))}</span><span style="font-size:13px;color:var(--ink-3);font-weight:600">m² · 2015–2021</span></div>
@@ -1937,9 +1953,11 @@ function mqRenderEnv() {
       <div style="font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.4">« Autres » regroupe l'artificialisation à usage d'activité et de tertiaire.</div>` : ''}
     </div>
     <div class="panel">
+      ${gesObjLine}
       <div class="panel-head"><span class="panel-title">Émissions GES par habitant</span><span class="src">ADEME · inventaire territorial</span></div>
       <div style="margin-bottom:20px">${gesRows}</div>
       <div class="legend"><span><i class="line"></i>France</span><span><i class="line pr"></i>Pairs</span></div>
+      ${gesEtiquette}
       <div class="divider-h"></div>
       <div class="panel-head"><span class="panel-title">Répartition des émissions</span><span class="src">ADEME · inventaire territorial</span></div>
       <div class="donut-wrap" id="gesDonut" data-total="${mqComma(e.gesTotPerHab)}"></div>
@@ -2064,6 +2082,17 @@ function mqAnimateSection(sec) {
   const r = sec.querySelector('#radar'); if (r && !r.dataset.done) { r.dataset.done = 1; mqDrawRadar(r); }
   const pg = sec.querySelector('#pitchGrid'); if (pg && !pg.dataset.done) { pg.dataset.done = 1; mqBuildPitches(pg); }
   const dn = sec.querySelector('#gesDonut'); if (dn && !dn.dataset.done) { dn.dataset.done = 1; mqDrawDonut(dn); }
+  const et = sec.querySelector('#gesEtiquette');
+  if (et && !et.dataset.done) {
+    et.dataset.done = 1;
+    const kg = et.dataset.kg || 2000;
+    const sc = document.createElement('script');
+    sc.setAttribute('data-name', 'impact-co2');
+    sc.src = 'https://impactco2.fr/iframe.js';
+    sc.setAttribute('data-type', 'comparateur/etiquette-animee');
+    sc.setAttribute('data-search', '?value=' + kg + '&comparisons=tgv-paris-marseille,avion-pny,game-of-thrones,ter,biere,painauchocolat,email,smartphone&language=fr&theme=default');
+    et.appendChild(sc);
+  }
 }
 const mqIo = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { if (e.target.classList.contains('section') && !e.target.classList.contains('collapsed')) mqAnimateSection(e.target); mqIo.unobserve(e.target); } });

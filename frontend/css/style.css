@@ -4960,3 +4960,30 @@ html, body { background: #eceeec; }
 #view-cartographie .cs-tag.up { background: color-mix(in oklab, var(--vegetal) 15%, transparent); color: var(--vegetal); }
 #view-cartographie .cs-tag.down { background: color-mix(in oklab, var(--red) 13%, transparent); color: var(--red); }
 #view-cartographie .cs-tag.neutral { background: var(--card-2); color: var(--ink-2); }
+
+
+
+/* === Lisibilité : agrandissement des petits textes du diagnostic === */
+#diag-root .src { font-size: 12px; }
+#diag-root .cell-label { font-size: 12px; }
+#diag-root .gauge-scale,
+#diag-root .pctl-scale { font-size: 11px; }
+#diag-root .gauge-ref { font-size: 12.5px; }
+#diag-root .age-axis { font-size: 12px; }
+#diag-root .waffle-foot { font-size: 11.5px; }
+#diag-root .dual-foot { font-size: 13px; }
+#diag-root .soc-rank { font-size: 12px; }
+#diag-root .waffle-eq { font-size: 25px; }
+#diag-root .modal-legend { font-size: 13px; }
+#diag-root .legend { font-size: 13px; }
+#diag-root .kpi-label { font-size: 12.5px; }
+#diag-root .kpi-meta { font-size: 12px; }
+#diag-root .panel-title { font-size: 20px; }
+
+/* === Agrandissement global proportionnel du diagnostic === */
+#diag-root { zoom: 1.3; }
+
+#diag-root .acc-note { font-size: 15px; line-height: 1.5; }
+
+.hdr-nav a,
+.carto-hdr-nav a { font-size:  56px !important; }
